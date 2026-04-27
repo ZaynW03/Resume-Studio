@@ -1,260 +1,175 @@
-# FlowCV Clone — local resume builder
+# 📄 Resume Studio
 
-A local, FlowCV-style resume builder. Front / back separated.
+<div align="center">
 
-- **Import** a PDF or image resume (EN / ZH) → auto-parse into structured JSON
-- **Edit** with per-module shape-aware forms and a TipTap rich-text editor
-- **Customize** templates, layout, spacing, headings, personal-block layout, photo
-- **Preview** is the *exact* HTML that WeasyPrint will render to PDF (WYSIWYG)
-- **Profile library** — a persistent pool of your history, reusable across resumes
-- **Optional LLM** — paste a JD to get a match score, recommendations, a full
-  tailored resume generated from your library, or “AI improve” on any bullet
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 
-Everything is stored as plain JSON files under `backend/data/`.
-No external database. No account. Fully offline unless you add an API key.
+**Your AI-Powered End-to-End Career Agent | 你的专属 AI 求职智能体**
+
+[English](#english) | [中文](#chinese)
+
+</div>
 
 ---
 
-## Quick start
+<a name="english"></a>
+## 🇬🇧 English
 
-### 1. System prerequisites
+**Resume Studio** is an open-source, local-first resume builder inspired by FlowCV. It provides a WYSIWYG editing experience, intelligent PDF importing, and AI-assisted tailoring capabilities.
 
-These three are the usual stumbling blocks — install once, then never think
-about them again.
+> **🚀 Project Vision: The End-to-End Job Agent**
+> This project is currently in **Phase 1** (Resume Editing & Display Platform). 
+> Our ultimate goal is to evolve into a fully autonomous job-seeking agent that will:
+> - Search for matching job roles across the web automatically.
+> - Tailor your resume 1-on-1 based on Job Descriptions (JD).
+> - Automate job applications and monitor your email.
+> - Auto-schedule interviews on your calendar.
+
+### ✨ Features (Phase 1)
+- **Smart Import**: Upload a PDF or image, and automatically parse it into structured JSON.
+- **Visual Editing**: Edit with per-module shape-aware forms and a TipTap rich-text editor.
+- **Deep Customization**: Customize templates, layouts, spacing, fonts, section headings, and photos.
+- **WYSIWYG Preview**: The preview is the *exact* HTML that WeasyPrint will render to PDF.
+- **Profile Library**: A persistent pool of your career history, reusable across different resumes.
+- **Optional AI Assistant**: Paste a JD to get a match score, or use the LLM to write and improve your bullet points. Everything runs locally without external database lock-in.
+
+### 🚀 Quick Start
+
+#### 1. System Prerequisites
+You will need to install a few system dependencies for PDF parsing and rendering. Install once, and you are good to go:
 
 | Tool | macOS (Homebrew) | Ubuntu / Debian | Purpose |
 |---|---|---|---|
-| **Tesseract OCR** (with Chinese) | `brew install tesseract tesseract-lang` | `sudo apt install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng` | OCR fallback for scanned PDFs / images |
-| **Poppler** | `brew install poppler` | `sudo apt install poppler-utils` | `pdf2image` backend |
-| **WeasyPrint** native libs | `brew install pango cairo gdk-pixbuf libffi` | `sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi-dev` | PDF rendering |
+| **Tesseract OCR** | `brew install tesseract tesseract-lang` | `sudo apt install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng` | OCR fallback for scanned PDFs |
+| **Poppler** | `brew install poppler` | `sudo apt install poppler-utils` | PDF to Image extraction |
+| **WeasyPrint** | `brew install pango cairo gdk-pixbuf libffi` | `sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi-dev` | High-quality PDF rendering |
 
-Also required: **Python 3.10+**, **Node.js 18+**.
+*Note: Requires **Python 3.10+** and **Node.js 18+**.*
 
-### 2. One command
-
-From the project root:
-
+#### 2. Start the Application (One Command)
+Run the startup script from the project root:
 ```bash
 ./start.sh
 ```
+This script sets up the Python virtual environment, installs dependencies, and boots both servers:
+- **Backend (FastAPI)**: http://localhost:8000
+- **Frontend (Vite)**: http://localhost:5173
 
-This creates a Python venv, installs deps, copies `.env.example` to `.env` if
-needed, and boots both servers:
+#### 3. Manual Start
+If you prefer running them separately:
 
-- Backend (FastAPI): <http://localhost:8000>
-- Frontend (Vite): <http://localhost:5173>
-
-Open the frontend URL. Ctrl+C once to stop both.
-
-### 3. Manual start (if you prefer separate terminals)
-
-Terminal A — backend:
+**Backend:**
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # edit if you want LLM features
+cp .env.example .env  # Edit for LLM features if needed
 uvicorn app.main:app --reload --port 8000
 ```
-
-Terminal B — frontend:
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 4. (Optional) enable LLM features
-
-Edit `backend/.env`:
-
+#### 4. (Optional) Enable AI Features
+To use AI resume tailoring, add your LLM API keys in `backend/.env`:
 ```env
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-ANTHROPIC_MODEL=claude-sonnet-4-5
-```
-
-Or OpenAI / any OpenAI-compatible endpoint (Ollama, LM Studio, …):
-
-```env
-LLM_PROVIDER=openai
+LLM_PROVIDER=openai  # or anthropic
 OPENAI_API_KEY=sk-...
-OPENAI_BASE_URL=            # optional, e.g. http://localhost:11434/v1 for Ollama
+# OPENAI_BASE_URL=http://localhost:11434/v1  # optional, for Ollama/LM Studio
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Restart the backend. In **Content → JD match & AI generate**, paste a JD and
-use **Analyze** or **Generate from library**. Each entry editor gains an “AI
-improve” button next to the description.
+### 🛠️ Architecture & API
+- **Frontend**: React + Vite + Zustand + TailwindCSS
+- **Backend**: Python + FastAPI + Pydantic + WeasyPrint
+- **Storage**: Plain JSON files under `backend/data/` (No SQL DB required).
+- Check `http://localhost:8000/docs` for the interactive OpenAPI docs.
 
 ---
 
-## How to use
+<a name="chinese"></a>
+## 🇨🇳 中文
 
-### Import an existing resume
-Top bar → **Import PDF/Image** → pick a file.
-- Text-based PDFs are extracted with `pdfplumber` (fast, accurate).
-- Scanned PDFs / images fall back to Tesseract OCR (`chi_sim+eng`).
-- The text is section-matched (regex on both English and Chinese aliases:
-  `工作经历`, `教育`, `项目`, `技能`, …) and each section is split into dated
-  entries.
+**Resume Studio** 是一个开源的、本地优先的简历生成器（受 FlowCV 启发）。它提供了所见即所得（WYSIWYG）的编辑体验、简历解析导入功能以及 AI 辅助的简历润色定制。
 
-### Edit content
-Left sidebar → **Content**. Top of the panel is the personal-details block;
-below it, the module list. Click a module to open its entries; click an entry
-to open the shape-aware editor. Every description field is a TipTap editor
-with bold / italic / underline / alignment / bullet & numbered lists / links.
+> **🚀 项目愿景：端到端求职 Agent**
+> 当前项目处于 **第一阶段**（简历展示与修改平台）。
+> 后续我们将致力于把它打造成端到端求职智能体（Agent），实现：
+> - 自动化全网搜寻匹配的工作岗位（Job Role）。
+> - 根据目标职位描述（JD）一对一定制修改和优化简历。
+> - 自动化投递简历并持续监控邮箱反馈。
+> - 自动安排面试日历。
 
-Drag the grip handles to reorder entries (inside a module) or modules
-themselves. Each module and entry has an independent **hide** toggle —
-hidden items disappear from the preview and PDF but are kept in the JSON.
+### ✨ 功能介绍 (第一阶段)
+- **智能导入**：支持上传 PDF 或图片格式的简历，自动解析为结构化 JSON 数据。
+- **可视化编辑**：提供模块化的表单编辑与 TipTap 富文本编辑器，操作流畅。
+- **深度定制**：自由定制模板、排版、间距、字体以及各模块布局，支持个人照片上传。
+- **所见即所得**：预览界面即是最终生成的 HTML，通过 WeasyPrint 精准渲染为高质量 PDF。
+- **个人档案库**：建立持久化的个人经历库，可在不同版本简历间一键复用。
+- **AI 智能辅助**：粘贴 JD 即可获取匹配评分、优化建议；可针对单条经历进行 AI 智能润色（纯本地数据管理，可选接入大模型）。
 
-Click the icon next to a module name to pick a different Lucide icon.
-Double-click the module name to rename it.
+### 🚀 快速开始
 
-### Reuse history across resumes
-Left sidebar → **Profile**. This library is global and persisted in
-`backend/data/profile.json`. Any entry here can be imported into the
-currently-open resume with one click (**Use in resume**).
+#### 1. 系统依赖
+处理 PDF 和图像解析需要安装以下底层依赖（只需安装一次）：
 
-### Customize
-Left sidebar → **Customize**.
-- **Template** — `classic` is included; add more by dropping a Jinja2 file
-  at `backend/app/templates/<name>.html` and referencing it by `id`.
-- **Layout & Page breaks** — paper size, column count, per-module page breaks.
-- **Spacing & Font** — font family, size, line height, section margin,
-  space between entries, page margin.
-- **Section headings** — font, size, case (UPPER / lower / Title), weight,
-  heading and accent colors.
-- **Personal details block** — alignment and arrangement.
-- **Photo** — show/hide, shape (circle / square / rounded), position relative
-  to personal details (left / right / top), size.
+| 工具 | macOS (Homebrew) | Ubuntu / Debian | 作用 |
+|---|---|---|---|
+| **Tesseract OCR** | `brew install tesseract tesseract-lang` | `sudo apt install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng` | 扫描版 PDF 和图片的 OCR 识别 |
+| **Poppler** | `brew install poppler` | `sudo apt install poppler-utils` | PDF 转图片底层支持 |
+| **WeasyPrint** | `brew install pango cairo gdk-pixbuf libffi` | `sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi-dev` | 核心 PDF 渲染器 |
 
-Every change is reflected in the right-side preview immediately, and the
-preview *is* the HTML that WeasyPrint will turn into your PDF.
+*注意：环境需要 **Python 3.10+** 及 **Node.js 18+**。*
 
-### Export
-Preview top bar → **Download PDF**.
-
----
-
-## API surface
-
-All JSON, under `http://localhost:8000`:
-
+#### 2. 一键启动
+在项目根目录下运行启动脚本：
+```bash
+./start.sh
 ```
-GET    /api/health
+该脚本会自动创建 Python 虚拟环境、安装依赖，并启动前后端服务：
+- **后端 (FastAPI)**: http://localhost:8000
+- **前端 (Vite)**: http://localhost:5173
 
-# Resumes
-GET    /api/resume                List all resumes (id, title, updated_at)
-POST   /api/resume                Create (pass body to seed, or empty for default)
-GET    /api/resume/{id}
-PUT    /api/resume/{id}           Replace with full Resume JSON
-DELETE /api/resume/{id}
+#### 3. 手动启动
+如果你习惯于在不同终端中分别启动服务：
 
-# Profile library
-GET    /api/profile
-PUT    /api/profile
-
-# Parse uploads
-POST   /api/parse/upload          multipart/form-data file=<pdf|image>  -> {resume, raw_text_preview, file_url}
-POST   /api/parse/photo           multipart/form-data file=<image>      -> {url}
-
-# LLM (no-op without API key)
-GET    /api/llm/status
-POST   /api/llm/analyze           {resume_id, jd}
-POST   /api/llm/recommend         {jd, module_type, language}
-POST   /api/llm/generate          {jd, language}
-POST   /api/llm/improve           {text, jd?, language}
-
-# Export
-GET    /api/export/{id}/html
-GET    /api/export/{id}/pdf
-POST   /api/export/html           {resume}           # live preview
-POST   /api/export/pdf            {resume}           # download
+**启动后端:**
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # 如果需要 AI 功能，请在此配置
+uvicorn app.main:app --reload --port 8000
+```
+**启动前端:**
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-Open <http://localhost:8000/docs> for the Swagger UI.
-
----
-
-## Repo layout
-
-```
-flowcv-clone/
-├── start.sh
-├── backend/
-│   ├── requirements.txt
-│   ├── .env.example
-│   ├── data/                    # JSON storage (resumes + profile library)
-│   ├── uploads/                 # imported PDFs/images, photos
-│   └── app/
-│       ├── main.py              # FastAPI app & CORS
-│       ├── models/schema.py     # Pydantic schemas (source of truth)
-│       ├── services/
-│       │   ├── parser.py        # PDF/image -> Resume
-│       │   ├── renderer.py      # Resume -> HTML / PDF
-│       │   ├── storage.py       # JSON persistence
-│       │   └── llm.py           # optional LLM features
-│       ├── templates/
-│       │   └── classic.html     # Jinja2 template
-│       └── api/                 # FastAPI routers
-│           ├── parse.py
-│           ├── resume.py
-│           ├── profile.py
-│           ├── llm.py
-│           └── export.py
-└── frontend/
-    ├── package.json, vite.config.js, tailwind.config.js
-    ├── index.html
-    └── src/
-        ├── main.jsx, App.jsx, api.js
-        ├── store/resumeStore.js          # Zustand, single source of truth
-        ├── styles/index.css
-        └── components/
-            ├── common/ (TopBar, Sidebar, Fields, Icon)
-            ├── panels/ (ProfilePanel, ContentPanel, CustomizePanel)
-            ├── editor/ (ModuleList, EntryList, EntryEditor, RichTextEditor)
-            └── preview/PdfPreview.jsx    # iframe -> backend HTML render
+#### 4. (可选) 开启 AI 功能
+如需使用 AI 简历匹配和润色功能，请在 `backend/.env` 文件中配置 API Key：
+```env
+LLM_PROVIDER=openai  # 或使用 anthropic
+OPENAI_API_KEY=sk-...
+# OPENAI_BASE_URL=http://localhost:11434/v1  # 可选，用于 Ollama/LM Studio
+OPENAI_MODEL=gpt-4o-mini
 ```
 
----
-
-## Extending
-
-**Add a new template.** Create `backend/app/templates/modern.html` (copy
-`classic.html` as a starting point — the context is `resume` and `c`
-(customize)). Then add it to the `TEMPLATES` array in
-`frontend/src/components/panels/CustomizePanel.jsx`.
-
-**Add a new module type.**
-1. Define an entry model in `backend/app/models/schema.py`.
-2. Teach the parser to recognize it in `backend/app/services/parser.py`
-   (add aliases to `SECTION_ALIASES` and a `_build_*` function).
-3. Add a rendering branch in `backend/app/templates/classic.html`.
-4. Register it in `MODULE_BLUEPRINTS` and `EMPTY_ENTRY` in
-   `frontend/src/store/resumeStore.js`.
-5. Add a `Fields` component in
-   `frontend/src/components/editor/EntryEditor.jsx`.
-
-**Swap storage.** Only `backend/app/services/storage.py` talks to disk —
-replace its body with SQLite / Postgres / S3 without touching the API layer.
-
-**Change the LLM provider.** `backend/app/services/llm.py` is dispatched on
-`LLM_PROVIDER`. Add a new branch and you're done.
+### 🛠️ 架构与 API
+- **前端技术栈**: React + Vite + Zustand + TailwindCSS
+- **后端技术栈**: Python + FastAPI + Pydantic + WeasyPrint
+- **数据存储**: 所有数据以纯 JSON 形式保存在 `backend/data/` 目录下（无需数据库）。
+- 启动后可访问 `http://localhost:8000/docs` 查看交互式 API 文档。
 
 ---
 
-## Known limitations
-
-- The rule-based parser is deliberately simple; exotic layouts (2-column
-  PDFs with tables) will produce messy entries. With an LLM key you can
-  feed the raw text back through `/api/llm/generate` for cleanup.
-- WeasyPrint's CJK rendering depends on having CJK fonts installed on the
-  host (`Noto Sans CJK SC` is listed in the stylesheet). Install a CJK
-  font pack if your exported PDFs show tofu.
-- Page-break previews are approximate — the iframe is one continuous page,
-  while the PDF paginates. Use **Download PDF** to verify before printing.
-- Auto-save waits ~1.5 s after your last edit, then POSTs the full resume.
-  The store is the source of truth; a crash mid-edit costs at most that
-  delta.
+<div align="center">
+  <i>Built with ❤️ for better careers.</i>
+</div>
