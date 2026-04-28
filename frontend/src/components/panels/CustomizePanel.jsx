@@ -71,7 +71,6 @@ const CONTACT_SEPS = [
   { id: 'icon',   label: '☺ Icon'   },
   { id: 'bullet', label: '• Bullet' },
   { id: 'bar',    label: '| Bar'    },
-  { id: 'none',   label: 'None'     },
 ]
 
 // ─── Visual SVGs ─────────────────────────────────────────────────────────────
@@ -226,10 +225,9 @@ function PhotoSection({ c, update }) {
         <span className="text-sm font-semibold text-gray-900">Photo</span>
       </div>
       <div className="p-4 flex flex-col gap-4">
-        {/* Show / Grayscale */}
+        {/* Show */}
         <div className="flex flex-col gap-2.5">
           <CkBox label="Show" value={c.show_photo ?? true} onChange={(v) => update({ show_photo: v })}/>
-          <CkBox label="Grayscale" value={c.photo_grayscale ?? false} onChange={(v) => update({ photo_grayscale: v })}/>
         </div>
 
         {/* Photo position */}
@@ -240,21 +238,28 @@ function PhotoSection({ c, update }) {
               { id: 'left',  label: 'Left'  },
               { id: 'top',   label: 'Top'   },
               { id: 'right', label: 'Right' },
-            ].map(({ id, label }) => (
+            ].map(({ id, label }) => {
+              const isDisabled = (centerLocked && id !== 'top') || (c.personal_alignment === 'left' && id === 'top')
+              return (
               <VisualCard
                 key={id}
                 active={c.photo_position === id}
-                disabled={centerLocked && id !== 'top'}
+                disabled={isDisabled}
                 onClick={() => update({ photo_position: id })}
                 label={label}
               >
                 <PhotoPositionSVG pos={id} active={c.photo_position === id}/>
               </VisualCard>
-            ))}
+            )})}
           </div>
           {centerLocked && (
-            <div className="text-[10px] text-zinc-400 flex items-center gap-1">
-              <Lock size={9}/> Position locked to Top when Center alignment is on
+            <div className="text-[10px] text-zinc-400 flex items-center gap-1 mt-1">
+              <Lock size={9}/> Locked to Top when Center alignment
+            </div>
+          )}
+          {c.personal_alignment === 'left' && (
+            <div className="text-[10px] text-zinc-400 flex items-center gap-1 mt-1">
+              <Lock size={9}/> Top disabled when Left alignment
             </div>
           )}
         </div>
@@ -303,6 +308,12 @@ function HeaderLayoutSection({ c, update }) {
   const setAlignment = (v) => {
     if (v === 'center') {
       update({ personal_alignment: 'center', photo_position: 'top' })
+    } else if (v === 'left') {
+      if (c.photo_position === 'top') {
+        update({ personal_alignment: 'left', photo_position: 'right' })
+      } else {
+        update({ personal_alignment: 'left' })
+      }
     } else {
       update({ personal_alignment: v })
     }
