@@ -9,7 +9,7 @@ import {
 import { useT } from '../../i18n'
 
 const TABS = [
-  { id: 'profile',   label: 'Overview',  Icon: User },
+  { id: 'profile',   label: 'Profile',   Icon: User },
   { id: 'content',   label: 'Content',   Icon: FileEdit },
   { id: 'customize', label: 'Customize', Icon: Palette },
   { id: 'ai',        label: 'AI Tools',  Icon: Sparkles },

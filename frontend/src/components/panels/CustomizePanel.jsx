@@ -67,10 +67,14 @@ const PHOTO_SIZES = [
 
 const PHOTO_SHAPES = ['circle', 'square', 'rounded-sm', 'rounded-md', 'rounded']
 
-const CONTACT_SEPS = [
+const CONTACT_SEPS_INLINE = [
   { id: 'icon',   label: '☺ Icon'   },
   { id: 'bullet', label: '• Bullet' },
   { id: 'bar',    label: '| Bar'    },
+]
+const CONTACT_SEPS_BLOCK = [
+  { id: 'icon', label: '☺ Icon' },
+  { id: 'none', label: '✕ None' },
 ]
 
 // ─── Visual SVGs ─────────────────────────────────────────────────────────────
@@ -368,7 +372,14 @@ function HeaderLayoutSection({ c, update }) {
                 <VisualCard
                   key={id}
                   active={c.contacts_columns === id}
-                  onClick={() => update({ contacts_columns: id })}
+                  onClick={() => {
+                    const patch = { contacts_columns: id }
+                    // Reset separator to 'icon' when leaving inline with bullet/bar selected
+                    if (id !== 'inline' && ['bullet', 'bar'].includes(c.contact_separator)) {
+                      patch.contact_separator = 'icon'
+                    }
+                    update(patch)
+                  }}
                   label={label}
                 >
                   <ArrangementSVG type={id} active={c.contacts_columns === id}/>
@@ -378,20 +389,26 @@ function HeaderLayoutSection({ c, update }) {
           </div>
 
           {/* Contact separator */}
-          <div className="flex flex-col gap-1.5">
-            <ColLabel label="Contact separator"/>
-            <div className="grid grid-cols-2 gap-1.5">
-              {CONTACT_SEPS.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => update({ contact_separator: id })}
-                  className={'chip justify-center ' + (c.contact_separator === id ? 'chip-active' : '')}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const isInline = c.contacts_columns === 'inline'
+            const seps = isInline ? CONTACT_SEPS_INLINE : CONTACT_SEPS_BLOCK
+            return (
+              <div className="flex flex-col gap-1.5">
+                <ColLabel label="Contact separator"/>
+                <div className={`grid gap-1.5 ${isInline ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {seps.map(({ id, label }) => (
+                    <button
+                      key={id}
+                      onClick={() => update({ contact_separator: id })}
+                      className={'chip justify-center ' + (c.contact_separator === id ? 'chip-active' : '')}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
     </div>

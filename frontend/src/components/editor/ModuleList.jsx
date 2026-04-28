@@ -8,7 +8,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import {
   GripVertical, Eye, EyeOff, Trash2, Plus, ChevronDown, ChevronRight,
-  Library, Scissors, User, Lock,
+  Library, Scissors, User,
 } from 'lucide-react'
 
 import { useResumeStore, MODULE_BLUEPRINTS, PERSONAL_FIELD_ORDER } from '../../store/resumeStore'
@@ -139,35 +139,58 @@ function PersonalFieldRow({ field, value, visible, onToggle }) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg border border-gray-200 bg-white p-2.5">
+    <div ref={setNodeRef} style={style}>
       <div className="flex items-center gap-2">
-        <button className="text-zinc-600 hover:text-cyan-400 cursor-grab active:cursor-grabbing"
-          {...attributes} {...listeners}>
-          <GripVertical size={14}/>
-        </button>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-gray-500 uppercase tracking-[0.15em] mb-0.5">
+          <div className="text-[13px] font-semibold text-gray-800 mb-1">
             {t(`field.${field}`, field)}
           </div>
-          <div className={
-            'text-[12px] truncate ' +
-            (value ? 'text-gray-800' : 'text-zinc-400 italic')
-          }>
-            {value || 'Empty — edit in Overview'}
+          <div className="flex items-center gap-2">
+            <div className={
+              'flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm truncate ' +
+              (visible
+                ? 'bg-gray-100 text-gray-800'
+                : 'bg-gray-50 text-zinc-400 line-through')
+            }>
+              {value || <span className="italic text-zinc-400 no-underline" style={{textDecoration:'none'}}>Empty — edit in Profile</span>}
+            </div>
+            {/* Visibility toggle */}
+            <button
+              className={'p-1.5 rounded-lg transition-colors flex-shrink-0 ' +
+                (visible
+                  ? 'text-indigo-500 hover:bg-indigo-50'
+                  : 'text-zinc-300 hover:bg-gray-100')}
+              onClick={() => onToggle(!visible)}
+              title={visible ? 'Hide from resume' : 'Show on resume'}
+            >
+              {visible ? <Eye size={16}/> : <EyeOff size={16}/>}
+            </button>
+            {/* Drag handle */}
+            <button
+              className="text-zinc-400 hover:text-zinc-600 cursor-grab active:cursor-grabbing flex-shrink-0 p-1"
+              {...attributes} {...listeners}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14"/><path d="M5 12h14"/><path d="M8 8l4-4 4 4"/><path d="M8 16l4 4 4-4"/>
+              </svg>
+            </button>
           </div>
-        </div>
-        <div className="w-32 shrink-0">
-          <Toggle label="Show on resume" value={visible} onChange={onToggle}/>
         </div>
       </div>
     </div>
   )
 }
 
+const CONTACT_ICONS = {
+  location:  '📍', email: '✉', phone: '📞', date_of_birth: '🎂',
+  website: '🌐', linkedin: '🔗', github: '💻', wechat: '💬', qq: '🐧',
+}
+
 function PersonalDetailsCard({ mod }) {
   const updateModule = useResumeStore((s) => s.updateModule)
   const updatePersonal = useResumeStore((s) => s.updatePersonal)
   const personal = useResumeStore((s) => s.resume.personal)
+  const [editing, setEditing] = useState(false)
 
   const fieldOrder = personal.visible_fields?.length ? personal.visible_fields : PERSONAL_FIELD_ORDER
   const hidden = new Set(personal.hidden_fields || [])
@@ -188,45 +211,153 @@ function PersonalDetailsCard({ mod }) {
     updatePersonal({ visible_fields: next })
   }
 
+  const P = personal
+  const contactFields = fieldOrder.filter(
+    (f) => !['full_name','job_title','summary_line'].includes(f) && !hidden.has(f) && P[f]
+  )
+
   return (
     <div className="card overflow-visible">
-      <div className="flex items-center gap-2 px-3 py-3 border-b transition-colors border-indigo-200 bg-indigo-50/50">
-        <User size={16} className="text-cyan-400"/>
-        <div className="flex-1 text-left text-[15px] font-semibold text-gray-900 truncate">
-          {mod.name}
+      {/* ── Preview card ── */}
+      <div
+        className="relative group cursor-pointer"
+        onClick={() => setEditing(!editing)}
+      >
+        <div className="p-4">
+          {/* Name + title */}
+          <h2 className="text-xl font-bold text-gray-900 leading-tight">
+            {P.full_name || <span className="text-zinc-300 font-normal">Your name</span>}
+          </h2>
+          {P.job_title && (
+            <div className="text-sm text-zinc-500 mt-0.5">{P.job_title}</div>
+          )}
+
+          {/* Photo — below name, bigger */}
+          <div className="mt-3 flex items-start gap-4">
+            {P.photo_url ? (
+              <img src={P.photo_url} className="w-24 h-28 rounded-lg object-cover border border-gray-200/60 flex-shrink-0"/>
+            ) : (
+              <div className="w-24 h-28 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
+                <User size={32} className="text-gray-300"/>
+              </div>
+            )}
+
+            {/* Contact fields next to photo */}
+            {contactFields.length > 0 && (
+              <div className="flex flex-col gap-1.5 pt-1">
+                {contactFields.map((f) => (
+                  <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="text-[11px] w-4 text-center flex-shrink-0">{CONTACT_ICONS[f] || '•'}</span>
+                    <span className="truncate">{P[f]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-zinc-400">
-          <Lock size={10}/> Edit in Overview
-        </div>
+
+        {/* Edit button overlay */}
         <button
-          className="p-1.5 rounded hover:bg-white/10 text-zinc-500 hover:text-zinc-200"
-          title={mod.hidden ? 'Show' : 'Hide'}
-          onClick={() => updateModule(mod.id, { hidden: !mod.hidden })}
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          onClick={(e) => { e.stopPropagation(); setEditing(!editing) }}
         >
-          {mod.hidden ? <EyeOff size={14}/> : <Eye size={14}/>}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
         </button>
       </div>
 
-      {!mod.hidden && (
-        <div className="p-3 flex flex-col gap-2">
-          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.18em]">
-            Drag to reorder · toggle visibility. Edit values in the Overview tab.
-          </div>
-          <DndContext sensors={fieldSensors} collisionDetection={closestCenter} onDragEnd={onFieldDragEnd}>
-            <SortableContext items={fieldOrder} strategy={verticalListSortingStrategy}>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {fieldOrder.map((field) => (
-                  <PersonalFieldRow
-                    key={field}
-                    field={field}
-                    value={personal[field]}
-                    visible={visible.has(field)}
-                    onToggle={(on) => toggleVisible(field, on)}
-                  />
-                ))}
+      {/* ── Edit panel — FlowCV-style layout ── */}
+      {editing && (
+        <div className="border-t border-gray-100">
+          <div className="p-5 pb-4">
+            {/* Header */}
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Personal Details</h3>
+
+            {/* Name + Title + Photo row */}
+            <div className="flex gap-4 mb-4">
+              <div className="flex-1 flex flex-col gap-3">
+                {/* Full name field */}
+                {fieldOrder.includes('full_name') && (() => {
+                  const fVisible = visible.has('full_name')
+                  return (
+                    <div>
+                      <div className="text-[13px] font-semibold text-gray-800 mb-1">Full name</div>
+                      <div className={
+                        'px-3 py-2.5 rounded-lg text-sm ' +
+                        (fVisible ? 'bg-gray-100 text-gray-800' : 'bg-gray-50 text-zinc-400 line-through')
+                      }>
+                        {P.full_name || <span className="italic text-zinc-400" style={{textDecoration:'none'}}>Empty</span>}
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Job title field */}
+                {fieldOrder.includes('job_title') && (() => {
+                  const fVisible = visible.has('job_title')
+                  return (
+                    <div>
+                      <div className="text-[13px] font-semibold text-gray-800 mb-1">Professional title</div>
+                      <div className={
+                        'px-3 py-2.5 rounded-lg text-sm ' +
+                        (fVisible ? 'bg-gray-100 text-gray-800' : 'bg-gray-50 text-zinc-400 line-through')
+                      }>
+                        {P.job_title || <span className="italic text-zinc-400" style={{textDecoration:'none'}}>Empty</span>}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
-            </SortableContext>
-          </DndContext>
+
+              {/* Photo */}
+              <div className="flex-shrink-0">
+                <div className="text-[13px] font-semibold text-gray-800 mb-1">Photo</div>
+                {P.photo_url ? (
+                  <img src={P.photo_url} className="w-28 h-36 rounded-lg object-cover border border-gray-200"/>
+                ) : (
+                  <div className="w-28 h-36 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
+                    <User size={36} className="text-gray-300"/>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Remaining fields — single column, sortable */}
+            <DndContext sensors={fieldSensors} collisionDetection={closestCenter} onDragEnd={onFieldDragEnd}>
+              <SortableContext
+                items={fieldOrder.filter((f) => !['full_name','job_title'].includes(f))}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-3">
+                  {fieldOrder
+                    .filter((f) => !['full_name','job_title'].includes(f))
+                    .map((field) => (
+                      <PersonalFieldRow
+                        key={field}
+                        field={field}
+                        value={personal[field]}
+                        visible={visible.has(field)}
+                        onToggle={(on) => toggleVisible(field, on)}
+                      />
+                    ))
+                  }
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            {/* Done button — gradient style */}
+            <button
+              onClick={() => setEditing(false)}
+              className="w-full mt-5 py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:shadow-lg active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #ec4899)' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Done
+            </button>
+          </div>
         </div>
       )}
     </div>
