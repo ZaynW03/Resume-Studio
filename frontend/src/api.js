@@ -26,6 +26,8 @@ export const api = {
     json('/api/profile', { method: 'PUT', body: JSON.stringify(profile) }),
 
   // ---- parse ----
+  importJson: (data, save = true) =>
+    json('/api/parse/json', { method: 'POST', body: JSON.stringify({ data, save }) }),
   uploadResume: async (file) => {
     const fd = new FormData()
     fd.append('file', file)
@@ -65,13 +67,4 @@ export const api = {
 
   // ---- export ----
   previewHtmlUrl: '/api/export/html', // POST body: {resume}
-  exportPdf: async (resume) => {
-    const r = await fetch('/api/export/pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume }),
-    })
-    if (!r.ok) throw new Error(await r.text())
-    return r.blob()
-  },
 }

@@ -50,12 +50,12 @@ function withBase(fullHtml, extraHead = '') {
   )
 }
 
-async function waitForFrameAssets(doc) {
+async function waitForFrameAssets(doc, extraMs = 150) {
   const fontsReady = doc.fonts?.ready?.catch?.(() => {}) || Promise.resolve()
   const imagesReady = new Promise((resolve) => {
     const imgs = Array.from(doc.images || [])
     if (imgs.length === 0) {
-      setTimeout(resolve, 120)
+      setTimeout(resolve, 80)
       return
     }
     let left = imgs.length
@@ -73,19 +73,37 @@ async function waitForFrameAssets(doc) {
     setTimeout(resolve, 2500)
   })
   await Promise.all([fontsReady, imagesReady])
-  await new Promise((resolve) => setTimeout(resolve, 120))
+  await new Promise((resolve) => setTimeout(resolve, extraMs))
+}
+
+/**
+ * Create a hidden iframe for rendering.
+ * Positioned at (0,0) with opacity:0 rather than off-screen: browsers skip
+ * flex-layout and SVG alignment computations for elements far outside the
+ * viewport, which causes html2canvas to mis-position icons and borders.
+ * opacity:0 + pointer-events:none keeps it invisible and non-interactive.
+ */
+function makeHiddenFrame(w, h) {
+  const frame = document.createElement('iframe')
+  frame.setAttribute('scrolling', 'no')
+  frame.style.cssText = [
+    'position:fixed',
+    'left:0',
+    'top:0',
+    `width:${w}px`,
+    `height:${h}px`,
+    'border:0',
+    'background:white',
+    'overflow:hidden',
+    'pointer-events:none',
+    'opacity:0',
+    'z-index:-1',
+  ].join(';')
+  return frame
 }
 
 async function paginateRenderedHtml(fullHtml, paper) {
-  const iframe = document.createElement('iframe')
-  iframe.style.position = 'fixed'
-  iframe.style.left = '-10000px'
-  iframe.style.top = '0'
-  iframe.style.width = `${paper.w}px`
-  iframe.style.height = `${paper.h}px`
-  iframe.style.border = '0'
-  iframe.style.opacity = '0'
-  iframe.style.pointerEvents = 'none'
+  const iframe = makeHiddenFrame(paper.w, paper.h)
   document.body.appendChild(iframe)
 
   try {
@@ -353,14 +371,7 @@ export default function PdfPreview() {
     })
 
     for (let i = 0; i < renderPages.length; i += 1) {
-      const frame = document.createElement('iframe')
-      frame.style.position = 'fixed'
-      frame.style.left = '-10000px'
-      frame.style.top = '0'
-      frame.style.width = `${paper.w}px`
-      frame.style.height = `${paper.h}px`
-      frame.style.border = '0'
-      frame.style.background = 'white'
+      const frame = makeHiddenFrame(paper.w, paper.h)
       document.body.appendChild(frame)
 
       try {
@@ -369,7 +380,8 @@ export default function PdfPreview() {
         doc.open()
         doc.write(withBase(renderPages[i].html))
         doc.close()
-        await waitForFrameAssets(doc)
+        // Wait longer on the first page so fonts finish loading
+        await waitForFrameAssets(doc, i === 0 ? 400 : 150)
 
         const canvas = await html2canvas(doc.body, {
           backgroundColor: '#ffffff',
@@ -380,10 +392,13 @@ export default function PdfPreview() {
           height: paper.h,
           windowWidth: paper.w,
           windowHeight: paper.h,
+          scrollX: 0,
+          scrollY: 0,
+          logging: false,
         })
-        const imgData = canvas.toDataURL('image/jpeg', 0.98)
+        const imgData = canvas.toDataURL('image/jpeg', 1.0)
         if (i > 0) pdf.addPage([paper.mm.w, paper.mm.h], paper.mm.w > paper.mm.h ? 'landscape' : 'portrait')
-        pdf.addImage(imgData, 'JPEG', 0, 0, paper.mm.w, paper.mm.h, undefined, 'FAST')
+        pdf.addImage(imgData, 'JPEG', 0, 0, paper.mm.w, paper.mm.h, undefined, 'NONE')
       } finally {
         frame.remove()
       }
@@ -421,38 +436,9 @@ export default function PdfPreview() {
   const downloadPdf = async () => {
     setError('')
     try {
-      const r = await fetch('/api/export/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume }),
-      })
-      if (!r.ok) {
-        let msg = `${r.status} ${r.statusText}`
-        try {
-          const body = await r.text()
-          try { const j = JSON.parse(body); if (j.detail) msg = j.detail } catch { msg = body || msg }
-        } catch {}
-        throw new Error(msg)
-      }
-      const blob = await r.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${resume.title || 'resume'}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
+      await downloadClientPdf()
     } catch (e) {
-      try {
-        await downloadClientPdf()
-        setError('')
-      } catch (fallbackErr) {
-        setError(
-          'WeasyPrint PDF failed: ' + String(e.message || e) +
-          '\nBrowser PDF fallback also failed: ' + String(fallbackErr.message || fallbackErr)
-        )
-      }
+      setError('PDF export failed: ' + String(e.message || e))
     }
   }
 

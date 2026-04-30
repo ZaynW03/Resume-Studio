@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { X, Sparkles, CheckSquare, Square } from 'lucide-react'
 import { api } from '../../api'
 import { Button } from './Fields'
+import { useT } from '../../i18n'
 
 function mergeProfilePreservingUntouched(latest = {}, incoming = {}) {
   return {
@@ -102,6 +103,7 @@ function isDuplicate(poolKey, entry, existing) {
 }
 
 function PoolGroup({ poolKey, entries, selected, toggleSelect, duplicates }) {
+  const t = useT()
   if (!entries.length) return null
   const allSelected = entries.every((_, i) => selected[i])
   const toggleAll = () => {
@@ -111,7 +113,7 @@ function PoolGroup({ poolKey, entries, selected, toggleSelect, duplicates }) {
     <section className="card relative z-0 overflow-visible">
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-white/5 bg-ink-900/50 rounded-t-[8px]">
         <div className="text-[11px] font-semibold text-gray-900 uppercase tracking-[0.15em]">
-          {POOL_LABELS[poolKey]}
+          {t('profile.pool.' + poolKey)}
         </div>
         <div className="text-xs text-zinc-500 tabular-nums">
           {entries.filter((_, i) => selected[i]).length} / {entries.length}
@@ -121,7 +123,7 @@ function PoolGroup({ poolKey, entries, selected, toggleSelect, duplicates }) {
           onClick={toggleAll}
           className="text-[11px] text-cyan-400 hover:text-cyan-300"
         >
-          {allSelected ? 'Deselect all' : 'Select all'}
+          {allSelected ? t('imp.deselect_all') : t('imp.select_all')}
         </button>
       </div>
       <div className="divide-y divide-white/5 rounded-b-[8px] bg-transparent">
@@ -148,7 +150,7 @@ function PoolGroup({ poolKey, entries, selected, toggleSelect, duplicates }) {
                   <div className="text-sm font-medium text-gray-900 truncate">{s.title}</div>
                   {dup && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-amber-400/10 text-amber-400 border border-amber-400/20">
-                      duplicate
+                      {t('imp.duplicate')}
                     </span>
                   )}
                 </div>
@@ -177,6 +179,7 @@ function PoolGroup({ poolKey, entries, selected, toggleSelect, duplicates }) {
 }
 
 export default function ImportReviewModal({ parsedResume, onClose, onConfirm }) {
+  const t = useT()
   const [profile, setProfile] = useState(null)
 
   // Load current profile to detect duplicates
@@ -267,14 +270,12 @@ export default function ImportReviewModal({ parsedResume, onClose, onConfirm }) 
         <div className="relative z-20 flex items-center gap-3 px-5 h-14 border-b border-white/5 bg-ink-800 rounded-t-lg flex-shrink-0">
           <Sparkles size={16} className="text-cyan-400"/>
           <div>
-            <div className="text-sm font-semibold text-gray-900">Add to your profile library?</div>
-            <div className="text-[11px] text-zinc-500">
-              Selected entries will be saved so you can reuse them across different resumes.
-            </div>
+            <div className="text-sm font-semibold text-gray-900">{t('imp.title')}</div>
+            <div className="text-[11px] text-zinc-500">{t('imp.subtitle')}</div>
           </div>
           <div className="flex-1"/>
           <div className="text-xs text-cyan-400 font-mono tabular-nums">
-            {totalSelected} / {totalExtracted} selected
+            {totalSelected} / {totalExtracted} {t('imp.selected_label')}
           </div>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/5 text-zinc-400 hover:text-white">
             <X size={16}/>
@@ -285,12 +286,12 @@ export default function ImportReviewModal({ parsedResume, onClose, onConfirm }) 
         <div className="relative z-10 flex-1 min-h-0 overflow-y-scroll overflow-x-hidden px-4 py-4 pr-3 pb-6 flex flex-col gap-3 app-scrollbar">
           {noEntries ? (
             <div className="text-center text-sm text-zinc-500 py-8">
-              No experience/project/skill entries detected in this file.
-              <br/>You can still edit the parsed content in the editor.
+              {t('imp.no_entries')}
+              <br/>{t('imp.no_entries_hint')}
             </div>
           ) : (
             !profile ? (
-              <div className="text-sm text-zinc-500">Loading profile library…</div>
+              <div className="text-sm text-zinc-500">{t('imp.loading')}</div>
             ) : (
               Object.entries(extracted).map(([pool, entries]) => (
                 <PoolGroup
@@ -309,12 +310,12 @@ export default function ImportReviewModal({ parsedResume, onClose, onConfirm }) 
         {/* Footer */}
         <div className="relative z-20 flex items-center gap-2 px-5 py-3 border-t border-white/5 bg-ink-900/40 rounded-b-lg flex-shrink-0">
           <div className="text-[11px] text-zinc-500">
-            Entries are selected by default. Unchecking an entry will still open the parsed resume for editing.
+            {t('imp.footer_hint')}
           </div>
           <div className="flex-1"/>
-          <Button variant="ghost" onClick={skipAll}>Skip — just open the resume</Button>
+          <Button variant="ghost" onClick={skipAll}>{t('imp.skip')}</Button>
           <Button onClick={confirmAndMerge} disabled={noEntries}>
-            Add {totalSelected} to library &amp; open
+            {t('lib.add')} {totalSelected} {t('imp.add_to_lib')}
           </Button>
         </div>
       </div>

@@ -54,7 +54,15 @@
       "Bash(awk '{print $5}')",
       "Bash(xargs -I{} taskkill /F /PID {})",
       "Bash(tasklist)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(.venv/Scripts/uvicorn app.main:app --port 8001)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('weasyprint', {}\\).get\\('message', 'n/a'\\)\\)\")",
+      "Bash(python3 -c \"import sys; html=sys.stdin.read\\(\\); print\\('Male in html:', 'Male' in html\\)\")",
+      "Bash(findstr :8000)",
+      "Bash(findstr LISTENING)",
+      "Bash(.venv/Scripts/python *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(.venv/Scripts/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload)"
     ]
   }
 }

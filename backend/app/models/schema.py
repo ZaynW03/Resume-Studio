@@ -161,13 +161,6 @@ class Customize(BaseModel):
         "iso", "slash", "dot", "short", "long", "year",
     ] = "slash"
 
-    # Per-module entry layout (legacy, per-module overrides)
-    entry_layouts: dict[str, str] = Field(default_factory=lambda: {
-        "experience": "dates-left",
-        "education":  "dates-left",
-        "projects":   "dates-left",
-    })
-
     # Global entry layout: inline | left-col | right-col
     entry_layout: Literal["inline", "left-col", "right-col"] = "inline"
 

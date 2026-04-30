@@ -11,6 +11,7 @@ function Row({ children }) {
 }
 
 function DescriptionEditor({ value, onChange, jd, language }) {
+  const t = useT()
   const [busy, setBusy] = useState(false)
   const [llmReady, setLlmReady] = useState(false)
   useEffect(() => { api.llmStatus().then((s) => setLlmReady(s.configured)).catch(() => {}) }, [])
@@ -28,14 +29,14 @@ function DescriptionEditor({ value, onChange, jd, language }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <div className="panel-title">Description</div>
+        <div className="panel-title">{t('editor.description')}</div>
         {llmReady && (
           <button
             onClick={improve}
             disabled={busy}
             className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 disabled:opacity-50"
           >
-            <Sparkles size={11}/> {busy ? 'Improving…' : 'AI improve'}
+            <Sparkles size={11}/> {busy ? t('editor.improving') : t('editor.ai_improve')}
           </button>
         )}
       </div>
@@ -50,21 +51,21 @@ function EducationFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="School"   value={entry.school} onChange={(v) => set({ school: v })}/>
-        <TextField label="Degree"   value={entry.degree} onChange={(v) => set({ degree: v })}/>
+        <TextField label={t('editor.school')}   value={entry.school} onChange={(v) => set({ school: v })}/>
+        <TextField label={t('editor.degree')}   value={entry.degree} onChange={(v) => set({ degree: v })}/>
       </Row>
       <Row>
-        <TextField label="Field of study" value={entry.field_of_study} onChange={(v) => set({ field_of_study: v })}/>
-        <TextField label="Location"       value={entry.location}       onChange={(v) => set({ location: v })}/>
+        <TextField label={t('editor.field_of_study')} value={entry.field_of_study} onChange={(v) => set({ field_of_study: v })}/>
+        <TextField label={t('editor.location')}       value={entry.location}       onChange={(v) => set({ location: v })}/>
       </Row>
       <Row>
-        <TextField label="Start date" value={entry.start_date} onChange={(v) => set({ start_date: v })} placeholder="2021-09"/>
-        <TextField label="End date"   value={entry.end_date}   onChange={(v) => set({ end_date: v })}   placeholder="Present"/>
+        <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => set({ start_date: v })} placeholder="2021-09"/>
+        <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => set({ end_date: v })}   placeholder="Present"/>
       </Row>
       <Row>
-        <TextField label="GPA" value={entry.gpa} onChange={(v) => set({ gpa: v })}/>
+        <TextField label={t('editor.gpa')} value={entry.gpa} onChange={(v) => set({ gpa: v })}/>
         <div className="flex items-end pb-1">
-          <Toggle label="Full-time" value={entry.is_full_time} onChange={(v) => set({ is_full_time: v })}/>
+          <Toggle label={t('editor.full_time')} value={entry.is_full_time} onChange={(v) => set({ is_full_time: v })}/>
         </div>
       </Row>
       <DescriptionEditor value={entry.description} onChange={(v) => set({ description: v })}/>
@@ -72,55 +73,60 @@ function EducationFields({ entry, set, t }) {
   )
 }
 
-function ExperienceFields({ entry, set }) {
+function ExperienceFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="Position" value={entry.position} onChange={(v) => set({ position: v })}/>
-        <TextField label="Company"  value={entry.company}  onChange={(v) => set({ company: v })}/>
+        <TextField label={t('editor.position')} value={entry.position} onChange={(v) => set({ position: v })}/>
+        <TextField label={t('editor.company')}  value={entry.company}  onChange={(v) => set({ company: v })}/>
       </Row>
       <Row>
-        <TextField label="Location" value={entry.location} onChange={(v) => set({ location: v })}/>
+        <TextField label={t('editor.location')} value={entry.location} onChange={(v) => set({ location: v })}/>
         <div className="flex items-end pb-1">
-          <Toggle label="Currently working here" value={entry.currently_working} onChange={(v) => set({ currently_working: v })}/>
+          <Toggle label={t('editor.currently_working')} value={entry.currently_working} onChange={(v) => set({ currently_working: v })}/>
         </div>
       </Row>
       <Row>
-        <TextField label="Start date" value={entry.start_date} onChange={(v) => set({ start_date: v })}/>
-        <TextField label="End date"   value={entry.end_date}   onChange={(v) => set({ end_date: v })}/>
+        <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => set({ start_date: v })}/>
+        <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => set({ end_date: v })}/>
       </Row>
       <DescriptionEditor value={entry.description} onChange={(v) => set({ description: v })}/>
     </div>
   )
 }
 
-function ProjectFields({ entry, set }) {
+function ProjectFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="Project name" value={entry.name} onChange={(v) => set({ name: v })}/>
-        <TextField label="Role"         value={entry.role} onChange={(v) => set({ role: v })}/>
+        <TextField label={t('editor.project_name')} value={entry.name} onChange={(v) => set({ name: v })}/>
+        <TextField label={t('editor.role')}         value={entry.role} onChange={(v) => set({ role: v })}/>
       </Row>
       <Row>
-        <TextField label="Start date" value={entry.start_date} onChange={(v) => set({ start_date: v })}/>
-        <TextField label="End date"   value={entry.end_date}   onChange={(v) => set({ end_date: v })}/>
+        <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => set({ start_date: v })}/>
+        <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => set({ end_date: v })}/>
       </Row>
-      <TextField label="Link" value={entry.link} onChange={(v) => set({ link: v })} placeholder="https://…"/>
+      <TextField label={t('editor.link')} value={entry.link} onChange={(v) => set({ link: v })} placeholder="https://…"/>
       <DescriptionEditor value={entry.description} onChange={(v) => set({ description: v })}/>
     </div>
   )
 }
 
-function SkillFields({ entry, set }) {
+function SkillFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="Category" value={entry.category} onChange={(v) => set({ category: v })}/>
-        <SelectField label="Level" value={entry.level || ''} onChange={(v) => set({ level: v })}
-          options={[{value:'',label:'—'},'Beginner','Intermediate','Advanced','Expert']}/>
+        <TextField label={t('editor.category')} value={entry.category} onChange={(v) => set({ category: v })}/>
+        <SelectField label={t('editor.level')} value={entry.level || ''} onChange={(v) => set({ level: v })}
+          options={[{value:'',label:'—'},
+            {value:'Beginner',    label:t('editor.level_beginner')},
+            {value:'Intermediate',label:t('editor.level_intermediate')},
+            {value:'Advanced',    label:t('editor.level_advanced')},
+            {value:'Expert',      label:t('editor.level_expert')},
+          ]}/>
       </Row>
       <TextArea
-        label="Items (comma-separated)"
+        label={t('editor.items')}
         value={(entry.items || []).join(', ')}
         onChange={(v) => set({ items: v.split(',').map((x) => x.trim()).filter(Boolean) })}
         rows={2}/>
@@ -128,15 +134,15 @@ function SkillFields({ entry, set }) {
   )
 }
 
-function AwardFields({ entry, set }) {
+function AwardFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="Title"  value={entry.title}  onChange={(v) => set({ title: v })}/>
-        <TextField label="Issuer" value={entry.issuer} onChange={(v) => set({ issuer: v })}/>
+        <TextField label={t('editor.title')}  value={entry.title}  onChange={(v) => set({ title: v })}/>
+        <TextField label={t('editor.issuer')} value={entry.issuer} onChange={(v) => set({ issuer: v })}/>
       </Row>
-      <TextField label="Date" value={entry.date} onChange={(v) => set({ date: v })}/>
-      <TextArea label="Description" value={entry.description} onChange={(v) => set({ description: v })} rows={3}/>
+      <TextField label={t('editor.date')} value={entry.date} onChange={(v) => set({ date: v })}/>
+      <TextArea label={t('editor.description')} value={entry.description} onChange={(v) => set({ description: v })} rows={3}/>
     </div>
   )
 }
@@ -145,14 +151,14 @@ function SummaryFields({ entry, set }) {
   return <DescriptionEditor value={entry.content} onChange={(v) => set({ content: v })}/>
 }
 
-function CustomFields({ entry, set }) {
+function CustomFields({ entry, set, t }) {
   return (
     <div className="flex flex-col gap-3">
       <Row>
-        <TextField label="Title"    value={entry.title}    onChange={(v) => set({ title: v })}/>
-        <TextField label="Subtitle" value={entry.subtitle} onChange={(v) => set({ subtitle: v })}/>
+        <TextField label={t('editor.title')}    value={entry.title}    onChange={(v) => set({ title: v })}/>
+        <TextField label={t('editor.subtitle')} value={entry.subtitle} onChange={(v) => set({ subtitle: v })}/>
       </Row>
-      <TextField label="Date" value={entry.date} onChange={(v) => set({ date: v })}/>
+      <TextField label={t('editor.date')} value={entry.date} onChange={(v) => set({ date: v })}/>
       <DescriptionEditor value={entry.description} onChange={(v) => set({ description: v })}/>
     </div>
   )
@@ -183,13 +189,13 @@ export default function InlineEntryEditor({ moduleId, entryId, onClose, onDelete
     <div className="bg-white overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-        <span className="text-[15px] font-bold text-gray-900">Edit Entry</span>
+        <span className="text-[15px] font-bold text-gray-900">{t('editor.edit_entry')}</span>
         <div className="flex items-center gap-1">
           <button
             className={'p-1.5 rounded-lg transition-colors ' +
               (entry.hidden ? 'text-gray-300 hover:text-gray-500' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}
             onClick={() => set({ hidden: !entry.hidden })}
-            title={entry.hidden ? 'Show entry' : 'Hide entry'}
+            title={entry.hidden ? t('editor.show') : t('editor.hide')}
           >
             {entry.hidden ? <EyeOff size={15}/> : <Eye size={15}/>}
           </button>
@@ -197,7 +203,7 @@ export default function InlineEntryEditor({ moduleId, entryId, onClose, onDelete
             <button
               className="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
               onClick={onDelete}
-              title="Delete entry"
+              title={t('editor.delete')}
             >
               <Trash2 size={15}/>
             </button>
@@ -218,7 +224,7 @@ export default function InlineEntryEditor({ moduleId, entryId, onClose, onDelete
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Done
+          {t('editor.done')}
         </button>
       </div>
     </div>

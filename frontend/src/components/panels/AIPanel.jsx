@@ -62,9 +62,7 @@ function JobMatchPanel() {
       </button>
       {open && (
         <div className="border-t border-gray-100 p-4 flex flex-col gap-3">
-          <p className="text-xs text-gray-500">
-            Paste a job description to analyze your resume's match score, or generate a tailored resume from scratch.
-          </p>
+          <p className="text-xs text-gray-500">{t('jd.desc')}</p>
           <textarea
             className="input-dark font-mono text-xs"
             rows={6}

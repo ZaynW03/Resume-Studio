@@ -15,6 +15,7 @@ import { useResumeStore, MODULE_BLUEPRINTS } from '../../store/resumeStore'
 import Icon from '../common/Icon'
 import LibraryPickerModal from '../common/LibraryPickerModal'
 import InlineEntryEditor from './InlineEntryEditor'
+import RichTextEditor from './RichTextEditor'
 import { useT } from '../../i18n'
 
 const uid = () => Math.random().toString(36).slice(2, 14)
@@ -266,11 +267,30 @@ function PersonalFieldRow({
 
 // ─── PersonalDetailsCard (original style) ─────────────────────────────────
 
+// Compute ordered token list from a personal object (used in handlers to avoid stale closures)
+function computePersonalOrderTokens(p) {
+  const builtinTokens = BUILTIN_PERSONAL_FIELDS.map((f) => f.key)
+  const extraTokens   = (p.extra_fields || []).map((ef) => toExtraToken(ef.id))
+  const allTokens     = [...builtinTokens, ...extraTokens]
+  const allTokenSet   = new Set(allTokens)
+
+  const baseOrder  = Array.isArray(p.visible_fields) && p.visible_fields.length
+    ? p.visible_fields
+    : allTokens
+  const dedupedBase = [...new Set(baseOrder)]
+
+  return [
+    ...dedupedBase.filter((t) => allTokenSet.has(t)),
+    ...allTokens.filter((t) => !dedupedBase.includes(t)),
+  ]
+}
+
 function PersonalDetailsCard({ mod }) {
   const updatePersonal = useResumeStore((s) => s.updatePersonal)
   const personal = useResumeStore((s) => s.resume.personal)
   const [editing, setEditing] = useState(false)
 
+  // ── Render-time derivations (for UI display only) ──
   const builtinEntries = BUILTIN_PERSONAL_FIELDS.map((f) => ({
     token: f.key,
     id: f.key,
@@ -294,37 +314,32 @@ function PersonalDetailsCard({ mod }) {
   const allEntries = [...builtinEntries, ...extraEntries]
   const byToken = new Map(allEntries.map((e) => [e.token, e]))
 
-  const baseOrder = Array.isArray(personal.visible_fields) && personal.visible_fields.length
-    ? personal.visible_fields
-    : [...builtinEntries.map((e) => e.token), ...extraEntries.map((e) => e.token)]
-  const dedupedBase = [...new Set(baseOrder)]
-  const orderTokens = [
-    ...dedupedBase.filter((t) => byToken.has(t)),
-    ...allEntries.map((e) => e.token).filter((t) => !dedupedBase.includes(t)),
-  ]
-  const hidden  = new Set(personal.hidden_fields || [])
-  const visible = new Set(orderTokens.filter((token) => !hidden.has(token)))
-
+  const orderTokens    = computePersonalOrderTokens(personal)
+  const hidden         = new Set(personal.hidden_fields || [])
+  const visible        = new Set(orderTokens.filter((token) => !hidden.has(token)))
   const orderedEntries = orderTokens.map((token) => byToken.get(token)).filter(Boolean)
   const visibleEntries = orderedEntries.filter((e) => !hidden.has(e.token))
   const hiddenBuiltin  = builtinEntries.filter((e) => hidden.has(e.token))
   const hiddenExtra    = extraEntries.filter((e) => hidden.has(e.token))
   const fieldSensors   = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
 
+  // ── Handlers — all use functional updatePersonal to read latest state ──
+
   const toggleVisible = (token, on) => {
-    const nextHidden = new Set(hidden)
-    if (on) nextHidden.delete(token)
-    else nextHidden.add(token)
-    updatePersonal({ hidden_fields: [...nextHidden] })
+    updatePersonal((p) => {
+      const nextHidden = new Set(p.hidden_fields || [])
+      if (on) nextHidden.delete(token)
+      else nextHidden.add(token)
+      return { hidden_fields: [...nextHidden] }
+    })
   }
 
   const onFieldDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return
-    updatePersonal({ visible_fields: arrayMove(orderTokens, orderTokens.indexOf(active.id), orderTokens.indexOf(over.id)) })
-  }
-
-  const patchExtra = (id, patch) => {
-    updatePersonal({ extra_fields: (personal.extra_fields || []).map((ef) => ef.id === id ? { ...ef, ...patch } : ef) })
+    updatePersonal((p) => {
+      const tokens = computePersonalOrderTokens(p)
+      return { visible_fields: arrayMove(tokens, tokens.indexOf(active.id), tokens.indexOf(over.id)) }
+    })
   }
 
   const updateEntryValue = (entry, value) => {
@@ -332,33 +347,46 @@ function PersonalDetailsCard({ mod }) {
       updatePersonal({ [entry.field]: value })
       return
     }
-    patchExtra(entry.id, { value })
-    const token = entry.token
-    if (!orderTokens.includes(token) || hidden.has(token)) {
-      updatePersonal({
-        visible_fields: orderTokens.includes(token) ? orderTokens : [...orderTokens, token],
-        hidden_fields: (personal.hidden_fields || []).filter((t) => t !== token),
-      })
-    }
+    // Single atomic update: patch value and ensure token is visible
+    updatePersonal((p) => {
+      const tokens = computePersonalOrderTokens(p)
+      const token  = entry.token
+      const newExtraFields = (p.extra_fields || []).map((ef) =>
+        ef.id === entry.id ? { ...ef, value } : ef
+      )
+      const patch = { extra_fields: newExtraFields }
+      if (!tokens.includes(token) || (p.hidden_fields || []).includes(token)) {
+        patch.visible_fields = tokens.includes(token) ? tokens : [...tokens, token]
+        patch.hidden_fields  = (p.hidden_fields || []).filter((t) => t !== token)
+      }
+      return patch
+    })
   }
 
   const updateEntryLabel = (entry, label) => {
     if (!entry.isCustom) return
-    patchExtra(entry.id, { label })
+    updatePersonal((p) => ({
+      extra_fields: (p.extra_fields || []).map((ef) =>
+        ef.id === entry.id ? { ...ef, label } : ef
+      ),
+    }))
   }
 
   const removeEntry = (entry) => {
     if (entry.isBuiltin) {
-      updatePersonal({
+      updatePersonal((p) => ({
         [entry.field]: '',
-        hidden_fields: [...new Set([...(personal.hidden_fields || []), entry.token])],
-      })
+        hidden_fields: [...new Set([...(p.hidden_fields || []), entry.token])],
+      }))
       return
     }
-    updatePersonal({
-      extra_fields: (personal.extra_fields || []).filter((ef) => ef.id !== entry.id),
-      visible_fields: orderTokens.filter((t) => t !== entry.token),
-      hidden_fields: (personal.hidden_fields || []).filter((t) => t !== entry.token),
+    updatePersonal((p) => {
+      const tokens = computePersonalOrderTokens(p)
+      return {
+        extra_fields:  (p.extra_fields || []).filter((ef) => ef.id !== entry.id),
+        visible_fields: tokens.filter((t) => t !== entry.token),
+        hidden_fields:  (p.hidden_fields || []).filter((t) => t !== entry.token),
+      }
     })
   }
 
@@ -366,10 +394,13 @@ function PersonalDetailsCard({ mod }) {
     const ef = preset
       ? { id: uid(), icon: preset.icon, label: preset.label, value: '' }
       : { id: uid(), icon: 'custom', label: '', value: '' }
-    updatePersonal({
-      extra_fields: [...(personal.extra_fields || []), ef],
-      visible_fields: [...orderTokens, toExtraToken(ef.id)],
-      hidden_fields: (personal.hidden_fields || []).filter((t) => t !== toExtraToken(ef.id)),
+    updatePersonal((p) => {
+      const tokens = computePersonalOrderTokens(p)
+      return {
+        extra_fields:  [...(p.extra_fields || []), ef],
+        visible_fields: [...tokens, toExtraToken(ef.id)],
+        hidden_fields:  (p.hidden_fields || []).filter((t) => t !== toExtraToken(ef.id)),
+      }
     })
   }
 
@@ -381,45 +412,46 @@ function PersonalDetailsCard({ mod }) {
 
   return (
     <div className="card overflow-visible">
-      {/* ── Preview card ── */}
-      <div className="relative group cursor-pointer" onClick={() => setEditing(!editing)}>
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-gray-900 leading-tight">
-            {P.full_name || <span className="text-zinc-300 font-normal">Your name</span>}
-          </h2>
-          {P.job_title && <div className="text-sm text-zinc-500 mt-0.5">{P.job_title}</div>}
+      {/* ── Preview card (click disabled — use the Edit button) ── */}
+      <div className="relative p-4">
+        <h2 className="text-xl font-bold text-gray-900 leading-tight">
+          {P.full_name || <span className="text-zinc-300 font-normal">Your name</span>}
+        </h2>
+        {P.job_title && <div className="text-sm text-zinc-500 mt-0.5">{P.job_title}</div>}
 
-          <div className="mt-3 flex items-start gap-4">
-            {P.photo_url ? (
-              <img src={P.photo_url} className="w-24 h-28 rounded-lg object-cover border border-gray-200/60 flex-shrink-0"/>
-            ) : (
-              <div className="w-24 h-28 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                <User size={32} className="text-gray-300"/>
-              </div>
-            )}
-            {contactEntries.length > 0 && (
-              <div className="flex flex-col gap-1.5 pt-1">
-                {contactEntries.map((e) => (
-                  <div key={e.token} className="flex items-center gap-2 text-xs text-gray-600">
-                    <span className="text-[11px] w-4 text-center flex-shrink-0">
-                      {e.isBuiltin ? (CONTACT_ICONS[e.field] || e.icon || '•') : (e.icon || '✦')}
-                    </span>
-                    <span className="truncate">{e.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="mt-3 flex items-start gap-4">
+          {P.photo_url ? (
+            <img src={P.photo_url} className="w-24 h-28 rounded-lg object-cover border border-gray-200/60 flex-shrink-0"/>
+          ) : (
+            <div className="w-24 h-28 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
+              <User size={32} className="text-gray-300"/>
+            </div>
+          )}
+          {contactEntries.length > 0 && (
+            <div className="flex flex-col gap-1.5 pt-1">
+              {contactEntries.map((e) => (
+                <div key={e.token} className="flex items-center gap-2 text-xs text-gray-600">
+                  <span className="text-[11px] w-4 text-center flex-shrink-0">
+                    {e.isBuiltin ? (CONTACT_ICONS[e.field] || e.icon || '•') : (e.icon || '✦')}
+                  </span>
+                  <span className="truncate">{e.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Edit button — always visible, only trigger for the edit panel */}
         <button
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-          onClick={(e) => { e.stopPropagation(); setEditing(!editing) }}
+          className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-white text-xs font-semibold shadow-md hover:bg-indigo-600 active:scale-95 transition-all"
+          onClick={() => setEditing((v) => !v)}
+          title="Edit personal details"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
+          {editing ? 'Close' : 'Edit'}
         </button>
       </div>
 
@@ -667,6 +699,84 @@ function ModuleCard({ mod, defaultOpen = false }) {
   )
 }
 
+// ─── SummaryModuleCard ────────────────────────────────────────────────────
+
+function SummaryModuleCard({ mod }) {
+  const updateModule = useResumeStore((s) => s.updateModule)
+  const removeModule = useResumeStore((s) => s.removeModule)
+  const addEntry     = useResumeStore((s) => s.addEntry)
+  const updateEntry  = useResumeStore((s) => s.updateEntry)
+
+  const [isOpen, setIsOpen] = useState(false)
+
+  const entry = mod.entries[0] ?? null
+
+  const handleOpen = () => {
+    if (!entry) addEntry(mod.id)
+    setIsOpen(true)
+  }
+
+  const liveEntry = mod.entries[0] ?? null
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-visible">
+      {/* Header */}
+      <div
+        className={'flex items-center gap-3 px-4 py-3.5 cursor-pointer select-none ' +
+          (isOpen ? 'rounded-t-2xl' : 'rounded-2xl')}
+        onClick={() => (isOpen ? setIsOpen(false) : handleOpen())}
+      >
+        <Icon name={mod.icon} size={17} className="text-[#1e1b3a] flex-shrink-0"/>
+        <span className="flex-1 text-[15px] font-bold text-[#1e1b3a]">{mod.name}</span>
+        {isOpen
+          ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0"/>
+          : <ChevronDown size={16} className="text-gray-400 flex-shrink-0"/>
+        }
+      </div>
+
+      {/* Expanded body */}
+      {isOpen && (
+        <div className="border-t border-gray-200">
+          <div className="px-4 pt-4 pb-2">
+            {liveEntry ? (
+              <RichTextEditor
+                value={liveEntry.content ?? ''}
+                onChange={(html) => updateEntry(mod.id, liveEntry.id, { content: html })}
+              />
+            ) : (
+              <div className="text-xs text-gray-400 py-4 text-center">Loading…</div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center px-4 py-2 border-t border-gray-100">
+            <button
+              className={'p-1.5 rounded-lg transition-colors flex-shrink-0 ' +
+                (mod.hidden ? 'text-gray-300 hover:text-gray-500' : 'text-gray-400 hover:text-gray-600') +
+                ' hover:bg-gray-50'}
+              onClick={() => updateModule(mod.id, { hidden: !mod.hidden })}
+              title={mod.hidden ? 'Show section' : 'Hide section'}
+            >
+              {mod.hidden ? <EyeOff size={15}/> : <Eye size={15}/>}
+            </button>
+            <div className="flex-1"/>
+            <button
+              className="p-1.5 text-gray-300 hover:text-red-400 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (confirm(`Delete "${mod.name}"?`)) removeModule(mod.id)
+              }}
+              title="Delete section"
+            >
+              <Trash2 size={15}/>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── ModuleList (top-level) ────────────────────────────────────────────────
 
 export default function ModuleList() {
@@ -686,6 +796,8 @@ export default function ModuleList() {
           ? <PageBreakCard key={m.id} mod={m}/>
           : m.type === 'personal_details'
           ? <PersonalDetailsCard key={m.id} mod={m}/>
+          : m.type === 'summary'
+          ? <SummaryModuleCard key={m.id} mod={m}/>
           : <ModuleCard key={m.id} mod={m}/>
       )}
 

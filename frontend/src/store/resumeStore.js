@@ -214,8 +214,11 @@ export const useResumeStore = create((set, get) => ({
   },
 
   // --------- personal ---------
-  updatePersonal: (patch) =>
-    set((s) => ({ resume: { ...s.resume, personal: { ...s.resume.personal, ...patch } } })),
+  updatePersonal: (patchOrFn) =>
+    set((s) => {
+      const patch = typeof patchOrFn === 'function' ? patchOrFn(s.resume.personal) : patchOrFn
+      return { resume: { ...s.resume, personal: { ...s.resume.personal, ...patch } } }
+    }),
 
   // --------- customize ---------
   updateCustomize: (patch) =>

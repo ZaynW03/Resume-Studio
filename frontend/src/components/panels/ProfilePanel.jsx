@@ -9,6 +9,7 @@ import {
   Instagram, Send, Gamepad2, Globe2, Cake, Sparkles,
 } from 'lucide-react'
 import { useResumeStore, EMPTY_ENTRY } from '../../store/resumeStore'
+import { useT } from '../../i18n'
 
 const uid = () => Math.random().toString(36).slice(2, 14)
 
@@ -131,6 +132,7 @@ function ExtraFieldIcon({ field, size = 13, className = '' }) {
 // ─── Personal preview card ────────────────────────────────────────────────────
 
 function PersonalPreviewCard({ P, onEdit }) {
+  const t = useT()
   const visibleContacts = PREVIEW_FIELDS.filter(({ key }) => P[key])
   const visibleExtras   = (P.extra_fields || []).filter((f) => f.value)
   const empty = visibleContacts.length === 0 && visibleExtras.length === 0
@@ -142,7 +144,7 @@ function PersonalPreviewCard({ P, onEdit }) {
         <button
           onClick={onEdit}
           className="absolute top-4 right-4 w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors shadow-sm"
-          title="Edit personal details"
+          title={t('profile.personal_details')}
         >
           <Pencil size={14}/>
         </button>
@@ -152,7 +154,7 @@ function PersonalPreviewCard({ P, onEdit }) {
           {P.full_name ? (
             <h2 className="text-2xl font-bold text-gray-900 leading-snug">{P.full_name}</h2>
           ) : (
-            <h2 className="text-lg font-normal text-gray-300 italic">Your Name</h2>
+            <h2 className="text-lg font-normal text-gray-300 italic">{t('profile.your_name')}</h2>
           )}
           {P.job_title && (
             <p className="text-sm text-gray-400 mt-0.5">{P.job_title}</p>
@@ -190,7 +192,7 @@ function PersonalPreviewCard({ P, onEdit }) {
               </div>
             ))}
             {empty && (
-              <p className="text-xs text-gray-300 italic">Click ✏ to add contact info</p>
+              <p className="text-xs text-gray-300 italic">{t('profile.click_add')}</p>
             )}
           </div>
         </div>
@@ -202,6 +204,7 @@ function PersonalPreviewCard({ P, onEdit }) {
 // ─── Personal edit form ───────────────────────────────────────────────────────
 
 function PersonalEditForm({ profile, setProfile, onDone }) {
+  const t = useT()
   const updatePersonal = useResumeStore((s) => s.updatePersonal)
   const [photoBusy, setPhotoBusy]   = useState(false)
   const [photoErr,  setPhotoErr]    = useState('')
@@ -304,7 +307,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
       <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <User size={13} className="text-indigo-500"/>
-          <span className="text-[11px] font-semibold text-gray-900 uppercase tracking-[0.15em]">Personal details</span>
+          <span className="text-[11px] font-semibold text-gray-900 uppercase tracking-[0.15em]">{t('profile.personal_details')}</span>
         </div>
       </div>
 
@@ -324,13 +327,13 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
             <label className={'cursor-pointer text-xs flex items-center gap-1 ' +
               (photoBusy ? 'text-gray-400 pointer-events-none' : 'text-indigo-500 hover:text-indigo-700')}>
               <Upload size={12}/>
-              {photoBusy ? 'Uploading…' : 'Upload photo'}
+              {photoBusy ? t('profile.uploading') : t('personal.upload_photo')}
               <input type="file" accept="image/*" className="hidden" disabled={photoBusy}
                 onChange={(e) => uploadPhoto(e.target.files?.[0])}/>
             </label>
             {P.photo_url && (
               <button className="text-xs text-gray-400 hover:text-red-400" onClick={() => update({ photo_url: '' })}>
-                Remove
+                {t('personal.remove')}
               </button>
             )}
           </div>
@@ -342,7 +345,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
         {/* Built-in fields, now entry-style like custom fields */}
         <div className="flex flex-col gap-2">
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.15em]">
-            Personal entries
+            {t('profile.personal_entries')}
           </div>
           {visibleBuiltinFields.map((field) => (
             <div key={field.key} className="flex items-center gap-1.5">
@@ -356,7 +359,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
                 type="text"
                 value={P[field.key] || ''}
                 onChange={(e) => update({ [field.key]: e.target.value })}
-                placeholder="Value"
+                placeholder={t('profile.value')}
                 className="flex-1 h-9 border border-gray-200 rounded-xl px-2.5 text-xs bg-white focus:border-indigo-400 focus:outline-none"
               />
               <button
@@ -373,7 +376,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
         {/* Custom / extra fields */}
         <div className="flex flex-col gap-2">
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.15em]">
-            Custom fields
+            {t('profile.custom_fields')}
           </div>
 
           {(P.extra_fields || []).map((f) => (
@@ -385,14 +388,14 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
                 type="text"
                 value={f.label || ''}
                 onChange={(e) => patchExtra(f.id, { label: e.target.value })}
-                placeholder="Label"
+                placeholder={t('profile.label_ph')}
                 className="w-28 h-9 border border-gray-200 rounded-xl px-2.5 text-xs bg-white focus:border-indigo-400 focus:outline-none"
               />
               <input
                 type="text"
                 value={f.value || ''}
                 onChange={(e) => patchExtra(f.id, { value: e.target.value })}
-                placeholder="Value"
+                placeholder={t('profile.value')}
                 className="flex-1 h-9 border border-gray-200 rounded-xl px-2.5 text-xs bg-white focus:border-indigo-400 focus:outline-none"
               />
               <button
@@ -430,7 +433,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
               onClick={() => addExtra()}
               className="flex items-center gap-1 text-[11px] border border-dashed border-gray-200 rounded-lg px-2 py-1 text-gray-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
             >
-              <Plus size={10}/> Custom
+              <Plus size={10}/> {t('profile.custom_add')}
             </button>
           </div>
         </div>
@@ -443,7 +446,7 @@ function PersonalEditForm({ profile, setProfile, onDone }) {
             (doneBusy ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700')
           }
         >
-          <Check size={14}/> {doneBusy ? 'Saving…' : 'Done'}
+          <Check size={14}/> {doneBusy ? t('profile.done_busy') : t('profile.done')}
         </button>
       </div>
     </div>
@@ -476,6 +479,7 @@ function PersonalPane({ profile, setProfile }) {
 // ─── EntryCard ────────────────────────────────────────────────────────────────
 
 function EntryCard({ poolKey, entry, onChange, onRemove, onImport }) {
+  const t = useT()
   const primary = {
     experiences: 'position',
     projects: 'name',
@@ -495,15 +499,15 @@ function EntryCard({ poolKey, entry, onChange, onRemove, onImport }) {
     <div className="card overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 bg-gray-50/80">
         <div className="flex-1 text-sm font-medium text-gray-900 truncate">
-          {primary ? (entry[primary] || 'Untitled') : 'Summary'}
+          {primary ? (entry[primary] || t('profile.untitled')) : t('profile.summary')}
           {secondary && entry[secondary] ? <span className="text-zinc-500"> · {entry[secondary]}</span> : null}
         </div>
         <button
           onClick={() => onImport(entry)}
           className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-          title="Add to current resume"
+          title={t('profile.use_in_resume')}
         >
-          <ArrowRight size={11}/> Use in resume
+          <ArrowRight size={11}/> {t('profile.use_in_resume')}
         </button>
         <button onClick={onRemove} className="p-1 rounded hover:bg-red-500/10 text-red-400">
           <Trash2 size={12}/>
@@ -512,42 +516,42 @@ function EntryCard({ poolKey, entry, onChange, onRemove, onImport }) {
       <div className="p-3 flex flex-col gap-2.5">
         {poolKey === 'experiences' && (
           <div className="grid grid-cols-2 gap-2.5">
-            <TextField label="Position" value={entry.position} onChange={(v) => onChange({ position: v })}/>
-            <TextField label="Company"  value={entry.company}  onChange={(v) => onChange({ company: v })}/>
-            <TextField label="Start"    value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
-            <TextField label="End"      value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
+            <TextField label={t('editor.position')} value={entry.position} onChange={(v) => onChange({ position: v })}/>
+            <TextField label={t('editor.company')}  value={entry.company}  onChange={(v) => onChange({ company: v })}/>
+            <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
+            <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
           </div>
         )}
         {poolKey === 'projects' && (
           <div className="grid grid-cols-2 gap-2.5">
-            <TextField label="Name" value={entry.name} onChange={(v) => onChange({ name: v })}/>
-            <TextField label="Role" value={entry.role} onChange={(v) => onChange({ role: v })}/>
-            <TextField label="Start" value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
-            <TextField label="End"   value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
+            <TextField label={t('editor.project_name')} value={entry.name} onChange={(v) => onChange({ name: v })}/>
+            <TextField label={t('editor.role')} value={entry.role} onChange={(v) => onChange({ role: v })}/>
+            <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
+            <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
             <div className="col-span-2">
-              <TextField label="Link" value={entry.link} onChange={(v) => onChange({ link: v })}/>
+              <TextField label={t('editor.link')} value={entry.link} onChange={(v) => onChange({ link: v })}/>
             </div>
           </div>
         )}
         {poolKey === 'educations' && (
           <div className="grid grid-cols-2 gap-2.5">
-            <TextField label="School" value={entry.school} onChange={(v) => onChange({ school: v })}/>
-            <TextField label="Degree" value={entry.degree} onChange={(v) => onChange({ degree: v })}/>
-            <TextField label="Start" value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
-            <TextField label="End"   value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
+            <TextField label={t('editor.school')} value={entry.school} onChange={(v) => onChange({ school: v })}/>
+            <TextField label={t('editor.degree')} value={entry.degree} onChange={(v) => onChange({ degree: v })}/>
+            <TextField label={t('editor.start_date')} value={entry.start_date} onChange={(v) => onChange({ start_date: v })}/>
+            <TextField label={t('editor.end_date')}   value={entry.end_date}   onChange={(v) => onChange({ end_date: v })}/>
           </div>
         )}
         {poolKey === 'awards' && (
           <div className="grid grid-cols-2 gap-2.5">
-            <TextField label="Title"  value={entry.title}  onChange={(v) => onChange({ title: v })}/>
-            <TextField label="Issuer" value={entry.issuer} onChange={(v) => onChange({ issuer: v })}/>
-            <TextField label="Date"   value={entry.date}   onChange={(v) => onChange({ date: v })}/>
+            <TextField label={t('editor.title')}  value={entry.title}  onChange={(v) => onChange({ title: v })}/>
+            <TextField label={t('editor.issuer')} value={entry.issuer} onChange={(v) => onChange({ issuer: v })}/>
+            <TextField label={t('editor.date')}   value={entry.date}   onChange={(v) => onChange({ date: v })}/>
           </div>
         )}
         {poolKey === 'skills' && (
           <>
-            <TextField label="Category" value={entry.category} onChange={(v) => onChange({ category: v })}/>
-            <TextArea label="Items (comma separated)"
+            <TextField label={t('editor.category')} value={entry.category} onChange={(v) => onChange({ category: v })}/>
+            <TextArea label={t('editor.items')}
               value={(entry.items || []).join(', ')}
               onChange={(v) => onChange({ items: v.split(',').map((x) => x.trim()).filter(Boolean) })}
               rows={2}/>
@@ -556,7 +560,7 @@ function EntryCard({ poolKey, entry, onChange, onRemove, onImport }) {
 
         {['experiences','projects','educations','summaries'].includes(poolKey) && (
           <div>
-            <div className="panel-title mb-1.5">Description</div>
+            <div className="panel-title mb-1.5">{t('editor.description')}</div>
             <RichTextEditor
               value={poolKey === 'summaries' ? entry.content : entry.description}
               onChange={(v) => onChange(poolKey === 'summaries' ? { content: v } : { description: v })}
@@ -571,6 +575,7 @@ function EntryCard({ poolKey, entry, onChange, onRemove, onImport }) {
 // ─── ProfilePanel ─────────────────────────────────────────────────────────────
 
 export default function ProfilePanel() {
+  const t = useT()
   const [profile, setProfile] = useState(null)
   const [openPool, setOpenPool] = useState('experiences')
 
@@ -596,7 +601,7 @@ export default function ProfilePanel() {
   }, [])
 
   if (!profile) {
-    return <div className="p-4 text-sm text-zinc-500">Loading profile library…</div>
+    return <div className="p-4 text-sm text-zinc-500">{t('profile.loading')}</div>
   }
 
   const update = (poolKey, idx, patch) => {
@@ -618,26 +623,24 @@ export default function ProfilePanel() {
       <div className="sticky top-0 z-20 px-4 py-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold text-gray-900">Profile library</div>
-            <div className="text-[11px] text-zinc-500">
-              Persistent pool of your history. Reuse entries across resumes.
-            </div>
+            <div className="text-sm font-semibold text-gray-900">{t('profile.title')}</div>
+            <div className="text-[11px] text-zinc-500">{t('profile.subtitle')}</div>
           </div>
         </div>
       </div>
 
       <div className="p-4 pt-3 flex flex-col gap-3">
-        <div className="panel-title pt-2">Entries</div>
+        <div className="panel-title pt-2">{t('profile.entries')}</div>
 
         <div className="flex flex-wrap gap-1.5">
-          {POOLS.map(({ key, label, Icon }) => {
+          {POOLS.map(({ key, Icon }) => {
             const active = openPool === key
             return (
               <button key={key}
                 onClick={() => setOpenPool(key)}
                 className={'chip ' + (active ? 'chip-active' : '')}
               >
-                <Icon size={11}/> {label}
+                <Icon size={11}/> {t('profile.pool.' + key)}
                 <span className={'tabular-nums text-[10px] ' + (active ? 'text-cyan-300' : 'text-zinc-500')}>
                   {(profile[key] || []).length}
                 </span>
@@ -662,7 +665,7 @@ export default function ProfilePanel() {
               onClick={() => add(key, factory)}
               className="flex items-center justify-center gap-1.5 text-sm text-indigo-500 border border-dashed border-gray-200 rounded-lg py-2.5 hover:border-indigo-300 hover:bg-indigo-50"
             >
-              <Plus size={14}/> Add entry
+              <Plus size={14}/> {t('profile.add_entry')}
             </button>
           </div>
         ))}

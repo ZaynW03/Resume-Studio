@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useResumeStore } from '../../store/resumeStore'
+import { useT } from '../../i18n'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Check, Lock, GripVertical, EyeOff,
@@ -49,7 +50,6 @@ const SUBTITLE_SIZES = [9, 10, 11, 12, 13]
 
 const SUBTITLE_STYLES = [
   { id: 'underline',   label: 'Underline' },
-  { id: 'overline',    label: 'Overline'  },
   { id: 'double-line', label: 'Double'    },
   { id: 'box',         label: 'Box'       },
   { id: 'pill',        label: 'Pill'      },
@@ -224,6 +224,8 @@ function ColLabel({ label }) {
 // ─── Photo module ─────────────────────────────────────────────────────────────
 
 function PhotoSection({ c, update }) {
+  const [open, setOpen] = useState(true)
+  const t = useT()
   const centerLocked = c.personal_alignment === 'center'
   const closestSize = PHOTO_SIZES.reduce((a, b) =>
     Math.abs(b.id - c.photo_size) < Math.abs(a.id - c.photo_size) ? b : a
@@ -231,23 +233,29 @@ function PhotoSection({ c, update }) {
 
   return (
     <div className="card">
-      <div className="flex items-center gap-2 px-4 py-3.5 border-b border-gray-100">
-        <span className="text-sm font-semibold text-gray-900">Photo</span>
-      </div>
-      <div className="p-4 flex flex-col gap-4">
+      <button
+        className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="text-sm font-semibold text-gray-900">{t('cust.photo')}</span>
+        {open
+          ? <ChevronUp size={14} className="text-gray-400"/>
+          : <ChevronDown size={14} className="text-gray-400"/>}
+      </button>
+      {open && <div className="p-4 flex flex-col gap-4">
         {/* Show */}
         <div className="flex flex-col gap-2.5">
-          <CkBox label="Show" value={c.show_photo ?? true} onChange={(v) => update({ show_photo: v })}/>
+          <CkBox label={t('cust.show_photo')} value={c.show_photo ?? true} onChange={(v) => update({ show_photo: v })}/>
         </div>
 
         {/* Photo position */}
         <div className="flex flex-col gap-1.5">
-          <ColLabel label="Photo position"/>
+          <ColLabel label={t('cust.photo_position')}/>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'left',  label: 'Left'  },
-              { id: 'top',   label: 'Top'   },
-              { id: 'right', label: 'Right' },
+              { id: 'left',  label: t('cust.pos_left')  },
+              { id: 'top',   label: t('cust.pos_top')   },
+              { id: 'right', label: t('cust.pos_right') },
             ].map(({ id, label }) => {
               const isDisabled = (centerLocked && id !== 'top') || (c.personal_alignment === 'left' && id === 'top')
               return (
@@ -264,19 +272,19 @@ function PhotoSection({ c, update }) {
           </div>
           {centerLocked && (
             <div className="text-[10px] text-zinc-400 flex items-center gap-1 mt-1">
-              <Lock size={9}/> Locked to Top when Center alignment
+              <Lock size={9}/> {t('cust.photo_lock_center')}
             </div>
           )}
           {c.personal_alignment === 'left' && (
             <div className="text-[10px] text-zinc-400 flex items-center gap-1 mt-1">
-              <Lock size={9}/> Top disabled when Left alignment
+              <Lock size={9}/> {t('cust.photo_lock_left')}
             </div>
           )}
         </div>
 
         {/* Size */}
         <div className="flex flex-col gap-1.5">
-          <ColLabel label="Size"/>
+          <ColLabel label={t('cust.photo_size')}/>
           <div className="flex gap-1.5">
             {PHOTO_SIZES.map(({ id, label }) => (
               <button
@@ -292,7 +300,7 @@ function PhotoSection({ c, update }) {
 
         {/* Shape */}
         <div className="flex flex-col gap-1.5">
-          <ColLabel label="Shape"/>
+          <ColLabel label={t('cust.photo_shape')}/>
           <div className="grid grid-cols-5 gap-2">
             {PHOTO_SHAPES.map((shape) => (
               <VisualCard
@@ -305,7 +313,7 @@ function PhotoSection({ c, update }) {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
@@ -314,6 +322,7 @@ function PhotoSection({ c, update }) {
 
 function HeaderLayoutSection({ c, update }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
 
   const setAlignment = (v) => {
     if (v === 'center') {
@@ -335,7 +344,7 @@ function HeaderLayoutSection({ c, update }) {
         className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
         onClick={() => setOpen(!open)}
       >
-        <span className="text-sm font-semibold text-gray-900">Personal details</span>
+        <span className="text-sm font-semibold text-gray-900">{t('cust.personal_details')}</span>
         {open
           ? <ChevronUp size={14} className="text-gray-400"/>
           : <ChevronDown size={14} className="text-gray-400"/>}
@@ -344,15 +353,15 @@ function HeaderLayoutSection({ c, update }) {
       {open && (
         <div className="p-4 flex flex-col gap-4">
           {/* Header layout label */}
-          <div className="text-xs font-bold text-gray-800 uppercase tracking-[0.12em]">Header layout</div>
+          <div className="text-xs font-bold text-gray-800 uppercase tracking-[0.12em]">{t('cust.header_layout')}</div>
 
           {/* Text alignment */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Text alignment"/>
+            <ColLabel label={t('cust.text_align')}/>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'left',   label: 'Left'   },
-                { id: 'center', label: 'Center' },
+                { id: 'left',   label: t('cust.align_left')   },
+                { id: 'center', label: t('cust.align_center') },
               ].map(({ id, label }) => (
                 <VisualCard
                   key={id}
@@ -368,12 +377,12 @@ function HeaderLayoutSection({ c, update }) {
 
           {/* Details arrangement */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Details arrangement"/>
+            <ColLabel label={t('cust.arrangement')}/>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'single', label: 'Single' },
-                { id: 'inline', label: 'Inline' },
-                { id: 'double', label: 'Double' },
+                { id: 'single', label: t('cust.arr_single') },
+                { id: 'inline', label: t('cust.arr_inline') },
+                { id: 'double', label: t('cust.arr_double') },
               ].map(({ id, label }) => (
                 <VisualCard
                   key={id}
@@ -400,7 +409,7 @@ function HeaderLayoutSection({ c, update }) {
             const seps = isInline ? CONTACT_SEPS_INLINE : CONTACT_SEPS_BLOCK
             return (
               <div className="flex flex-col gap-1.5">
-                <ColLabel label="Contact separator"/>
+                <ColLabel label={t('cust.contact_sep')}/>
                 <div className={`grid gap-1.5 ${isInline ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   {seps.map(({ id, label }) => (
                     <button
@@ -447,13 +456,14 @@ function SkillsColumnSVG({ cols, active }) {
 
 function NameTitleSection({ c, update }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
   return (
     <div className="card">
       <button
         className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
         onClick={() => setOpen(!open)}
       >
-        <span className="text-sm font-semibold text-gray-900">Name & Role Title</span>
+        <span className="text-sm font-semibold text-gray-900">{t('cust.name_title')}</span>
         {open
           ? <ChevronUp size={14} className="text-gray-400"/>
           : <ChevronDown size={14} className="text-gray-400"/>}
@@ -463,11 +473,11 @@ function NameTitleSection({ c, update }) {
         <div className="p-4 flex flex-col gap-4">
           {/* Position */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Position"/>
+            <ColLabel label={t('cust.name_pos')}/>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'same-line', label: 'Same Line' },
-                { id: 'below',     label: 'Below'     },
+                { id: 'same-line', label: t('cust.name_pos_same') },
+                { id: 'below',     label: t('cust.name_pos_below') },
               ].map(({ id, label }) => (
                 <button
                   key={id}
@@ -482,7 +492,7 @@ function NameTitleSection({ c, update }) {
 
           {/* Name size */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Name size"/>
+            <ColLabel label={t('cust.name_size')}/>
             <div className="flex gap-1.5">
               {['S', 'M', 'L'].map((sz) => (
                 <button
@@ -498,7 +508,7 @@ function NameTitleSection({ c, update }) {
 
           {/* Name font */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Name font"/>
+            <ColLabel label={t('cust.name_font')}/>
             <select
               value={c.name_font ?? 'Inter'}
               onChange={(e) => update({ name_font: e.target.value })}
@@ -508,12 +518,11 @@ function NameTitleSection({ c, update }) {
             </select>
           </div>
 
-          {/* Name bold */}
-          <CkBox label="Name bold" value={c.name_bold ?? true} onChange={(v) => update({ name_bold: v })}/>
+          <CkBox label={t('cust.name_bold')} value={c.name_bold ?? true} onChange={(v) => update({ name_bold: v })}/>
 
           {/* Title font */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Title font"/>
+            <ColLabel label={t('cust.title_font')}/>
             <select
               value={c.title_font ?? 'Inter'}
               onChange={(e) => update({ title_font: e.target.value })}
@@ -523,8 +532,7 @@ function NameTitleSection({ c, update }) {
             </select>
           </div>
 
-          {/* Title bold */}
-          <CkBox label="Title bold" value={c.title_bold ?? false} onChange={(v) => update({ title_bold: v })}/>
+          <CkBox label={t('cust.title_bold')} value={c.title_bold ?? false} onChange={(v) => update({ title_bold: v })}/>
         </div>
       )}
     </div>
@@ -535,13 +543,14 @@ function NameTitleSection({ c, update }) {
 
 function SkillsSection({ c, update }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
   return (
     <div className="card">
       <button
         className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
         onClick={() => setOpen(!open)}
       >
-        <span className="text-sm font-semibold text-gray-900">Skills</span>
+        <span className="text-sm font-semibold text-gray-900">{t('cust.skills_sec')}</span>
         {open
           ? <ChevronUp size={14} className="text-gray-400"/>
           : <ChevronDown size={14} className="text-gray-400"/>}
@@ -549,13 +558,12 @@ function SkillsSection({ c, update }) {
 
       {open && (
         <div className="p-4 flex flex-col gap-4">
-          {/* Style toggle */}
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Display style"/>
+            <ColLabel label={t('cust.display_style')}/>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'grid',   label: 'Grid'   },
-                { id: 'bubble', label: 'Bubble' },
+                { id: 'grid',   label: t('cust.skills_grid')   },
+                { id: 'bubble', label: t('cust.skills_bubble') },
               ].map(({ id, label }) => (
                 <button
                   key={id}
@@ -568,10 +576,9 @@ function SkillsSection({ c, update }) {
             </div>
           </div>
 
-          {/* Grid columns — only when grid */}
           {(c.skills_style ?? 'grid') === 'grid' && (
             <div className="flex flex-col gap-1.5">
-              <ColLabel label="Columns"/>
+              <ColLabel label={t('cust.skills_cols')}/>
               <div className="grid grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map((n) => (
                   <VisualCard
@@ -595,13 +602,14 @@ function SkillsSection({ c, update }) {
 
 function EducationSection({ c, update }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
   return (
     <div className="card">
       <button
         className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
         onClick={() => setOpen(!open)}
       >
-        <span className="text-sm font-semibold text-gray-900">Education</span>
+        <span className="text-sm font-semibold text-gray-900">{t('cust.education_sec')}</span>
         {open
           ? <ChevronUp size={14} className="text-gray-400"/>
           : <ChevronDown size={14} className="text-gray-400"/>}
@@ -610,11 +618,11 @@ function EducationSection({ c, update }) {
       {open && (
         <div className="p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Title & Subtitle Order"/>
+            <ColLabel label={t('cust.edu_order')}/>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'degree-school', label: 'Degree, School' },
-                { id: 'school-degree', label: 'School, Degree' },
+                { id: 'degree-school', label: t('cust.edu_degree_school') },
+                { id: 'school-degree', label: t('cust.edu_school_degree') },
               ].map(({ id, label }) => (
                 <button
                   key={id}
@@ -636,13 +644,14 @@ function EducationSection({ c, update }) {
 
 function ExperienceSection({ c, update }) {
   const [open, setOpen] = useState(true)
+  const t = useT()
   return (
     <div className="card">
       <button
         className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
         onClick={() => setOpen(!open)}
       >
-        <span className="text-sm font-semibold text-gray-900">Work Experience</span>
+        <span className="text-sm font-semibold text-gray-900">{t('cust.experience_sec')}</span>
         {open
           ? <ChevronUp size={14} className="text-gray-400"/>
           : <ChevronDown size={14} className="text-gray-400"/>}
@@ -651,11 +660,11 @@ function ExperienceSection({ c, update }) {
       {open && (
         <div className="p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <ColLabel label="Order title/subtitle"/>
+            <ColLabel label={t('cust.exp_order')}/>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'position-company', label: 'Job Title – Employer' },
-                { id: 'company-position', label: 'Employer – Job Title' },
+                { id: 'position-company', label: t('cust.exp_pos_co') },
+                { id: 'company-position', label: t('cust.exp_co_pos') },
               ].map(({ id, label }) => (
                 <button
                   key={id}
@@ -676,12 +685,19 @@ function ExperienceSection({ c, update }) {
 // ─── UI helpers ──────────────────────────────────────────────────────────────
 
 function ModuleSection({ icon: Icon, label, children }) {
+  const [open, setOpen] = useState(true)
   return (
     <div className="card">
-      <div className="flex items-center gap-2 px-4 py-3.5 border-b border-gray-100">
+      <button
+        className="flex items-center justify-between w-full px-4 py-3.5 border-b border-gray-100"
+        onClick={() => setOpen(!open)}
+      >
         <span className="text-sm font-semibold text-gray-900">{label}</span>
-      </div>
-      <div className="p-4 flex flex-col gap-5">{children}</div>
+        {open
+          ? <ChevronUp size={14} className="text-gray-400"/>
+          : <ChevronDown size={14} className="text-gray-400"/>}
+      </button>
+      {open && <div className="p-4 flex flex-col gap-5">{children}</div>}
     </div>
   )
 }
@@ -724,6 +740,188 @@ function ChoiceRow({ label, value, options, onChange, columns }) {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// ─── DiscreteSlider ──────────────────────────────────────────────────────────
+
+const THUMB_W = 44
+
+function DiscreteSlider({ label, value, options, onChange, unit = '' }) {
+  const vals       = options.map((o) => (typeof o === 'object' ? o.id : o))
+  const dispLabels = options.map((o) =>
+    typeof o === 'object' ? (o.label ?? String(o.id)) : String(o)
+  )
+  const N   = options.length
+  const idx = Math.max(0, vals.indexOf(value))
+  const select = (i) => onChange(vals[Math.max(0, Math.min(N - 1, i))])
+
+  const handleTrackClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const i = Math.round(((e.clientX - rect.left) / rect.width) * (N - 1))
+    select(i)
+  }
+
+  const thumbLeft = N > 1
+    ? `clamp(0px, calc(${(idx / (N - 1)) * 100}% - ${THUMB_W / 2}px), calc(100% - ${THUMB_W}px))`
+    : `calc(50% - ${THUMB_W / 2}px)`
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between">
+        <span className="panel-title">{label}</span>
+        <span className="text-xs text-gray-400 font-mono tabular-nums">
+          {dispLabels[idx]}{unit}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className="relative flex-1 h-10 bg-gray-100 rounded-xl cursor-pointer select-none overflow-hidden"
+          onClick={handleTrackClick}
+        >
+          <div
+            className="absolute top-0 h-full bg-indigo-600 rounded-xl pointer-events-none"
+            style={{ width: THUMB_W, left: thumbLeft }}
+          />
+          {Array.from({ length: N }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute top-1/2 -translate-y-1/2 w-px bg-gray-300 pointer-events-none"
+              style={{ height: '40%', left: N > 1 ? `${(i / (N - 1)) * 100}%` : '50%' }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => select(idx - 1)}
+          disabled={idx === 0}
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 text-lg font-light hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors select-none"
+        >−</button>
+        <button
+          onClick={() => select(idx + 1)}
+          disabled={idx === N - 1}
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 text-lg font-light hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors select-none"
+        >+</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── EntryLayoutPicker ───────────────────────────────────────────────────────
+
+// Colors used in all layout SVGs
+const C = {
+  title:    '#1e293b',
+  subtitle: '#94a3b8',
+  body:     '#e2e8f0',
+  date:     '#6366f1',   // always indigo — highlights WHERE the date goes
+  dateFade: '#c7d2fe',
+  colBg:    '#f1f5f9',
+  divider:  '#e2e8f0',
+}
+
+function InlineLayoutSVG() {
+  return (
+    <svg viewBox="0 0 88 64" xmlns="http://www.w3.org/2000/svg" className="w-full" style={{ height: 64 }}>
+      {/* Title + date on same row */}
+      <rect x="6"  y="10" width="38" height="5"   rx="1.5" fill={C.title}/>
+      <rect x="62" y="10" width="20" height="5"   rx="2"   fill={C.date} opacity="0.85"/>
+      {/* Subtitle */}
+      <rect x="6"  y="19" width="28" height="3.5" rx="1"   fill={C.subtitle}/>
+      {/* Body lines */}
+      <rect x="6"  y="28" width="76" height="3"   rx="1"   fill={C.body}/>
+      <rect x="6"  y="34" width="60" height="3"   rx="1"   fill={C.body}/>
+      <rect x="6"  y="40" width="68" height="3"   rx="1"   fill={C.body}/>
+    </svg>
+  )
+}
+
+function LeftColLayoutSVG() {
+  return (
+    <svg viewBox="0 0 88 64" xmlns="http://www.w3.org/2000/svg" className="w-full" style={{ height: 64 }}>
+      {/* Left column background */}
+      <rect x="4" y="6" width="22" height="52" rx="3" fill={C.colBg}/>
+      {/* Date in left col */}
+      <rect x="7"  y="11" width="16" height="3.5" rx="1" fill={C.date} opacity="0.9"/>
+      <rect x="7"  y="17" width="13" height="3"   rx="1" fill={C.dateFade}/>
+      <rect x="7"  y="23" width="15" height="2.5" rx="1" fill={C.dateFade} opacity="0.7"/>
+      {/* Divider */}
+      <line x1="30" y1="8" x2="30" y2="56" stroke={C.divider} strokeWidth="1"/>
+      {/* Title */}
+      <rect x="34" y="10" width="44" height="5"   rx="1.5" fill={C.title}/>
+      {/* Subtitle */}
+      <rect x="34" y="19" width="30" height="3.5" rx="1"   fill={C.subtitle}/>
+      {/* Body lines */}
+      <rect x="34" y="28" width="48" height="3"   rx="1"   fill={C.body}/>
+      <rect x="34" y="34" width="40" height="3"   rx="1"   fill={C.body}/>
+      <rect x="34" y="40" width="44" height="3"   rx="1"   fill={C.body}/>
+    </svg>
+  )
+}
+
+function RightColLayoutSVG() {
+  return (
+    <svg viewBox="0 0 88 64" xmlns="http://www.w3.org/2000/svg" className="w-full" style={{ height: 64 }}>
+      {/* Title */}
+      <rect x="6"  y="10" width="44" height="5"   rx="1.5" fill={C.title}/>
+      {/* Subtitle */}
+      <rect x="6"  y="19" width="30" height="3.5" rx="1"   fill={C.subtitle}/>
+      {/* Body lines */}
+      <rect x="6"  y="28" width="48" height="3"   rx="1"   fill={C.body}/>
+      <rect x="6"  y="34" width="40" height="3"   rx="1"   fill={C.body}/>
+      <rect x="6"  y="40" width="44" height="3"   rx="1"   fill={C.body}/>
+      {/* Divider */}
+      <line x1="58" y1="8" x2="58" y2="56" stroke={C.divider} strokeWidth="1"/>
+      {/* Right column background */}
+      <rect x="62" y="6" width="22" height="52" rx="3" fill={C.colBg}/>
+      {/* Date in right col */}
+      <rect x="65" y="11" width="16" height="3.5" rx="1" fill={C.date} opacity="0.9"/>
+      <rect x="65" y="17" width="13" height="3"   rx="1" fill={C.dateFade}/>
+      <rect x="65" y="23" width="15" height="2.5" rx="1" fill={C.dateFade} opacity="0.7"/>
+    </svg>
+  )
+}
+
+function EntryLayoutPicker({ value, onChange }) {
+  const t = useT()
+  const LAYOUT_CARDS = [
+    { id: 'inline',    label: t('cust.layout_inline'),    SVG: InlineLayoutSVG   },
+    { id: 'left-col',  label: t('cust.layout_left_col'),  SVG: LeftColLayoutSVG  },
+    { id: 'right-col', label: t('cust.layout_right_col'), SVG: RightColLayoutSVG },
+  ]
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {LAYOUT_CARDS.map(({ id, label, SVG }) => {
+        const active = value === id
+        return (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            className={
+              'relative flex flex-col items-stretch rounded-xl border p-2 pb-2.5 transition-all ' +
+              (active
+                ? 'border-indigo-500 bg-indigo-50 shadow-[0_0_0_3px_rgba(99,102,241,0.12)]'
+                : 'border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-white')
+            }
+          >
+            {active && (
+              <div className="absolute top-1.5 right-1.5 w-[14px] h-[14px] rounded-full bg-indigo-600 flex items-center justify-center">
+                <svg width="7" height="6" viewBox="0 0 8 7" fill="none">
+                  <polyline points="1 3.5 3.2 5.8 7 1" stroke="white" strokeWidth="1.6"
+                    strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
+            <div className={'rounded-lg overflow-hidden ' + (active ? 'bg-white' : 'bg-white/70')}>
+              <SVG />
+            </div>
+            <div className={'mt-2 text-center text-[11px] font-semibold tracking-wide ' +
+              (active ? 'text-indigo-700' : 'text-gray-500')}>
+              {label}
+            </div>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -836,8 +1034,15 @@ function TemplateThumbnail({ id }) {
 // ─── Template Carousel ───────────────────────────────────────────────────────
 
 function TemplateCarousel({ current, onApply }) {
+  const t = useT()
   const [pending, setPending] = useState(current)
   const scrollRef = useRef(null)
+
+  const TEMPLATES = [
+    { id: 'flowcv-style', name: t('cust.tpl_studio'),  desc: t('cust.tpl_studio_desc')  },
+    { id: 'classic',      name: t('cust.tpl_classic'), desc: t('cust.tpl_classic_desc') },
+    { id: 'minimal',      name: t('cust.tpl_minimal'), desc: t('cust.tpl_minimal_desc') },
+  ]
 
   const scroll = (dir) => {
     scrollRef.current?.scrollBy({ left: dir * 152, behavior: 'smooth' })
@@ -913,7 +1118,7 @@ function TemplateCarousel({ current, onApply }) {
         ].join(' ')}
       >
         <Check size={12} />
-        {pending === current ? 'Applied' : 'Apply template'}
+        {pending === current ? t('cust.applied') : t('cust.apply_tpl')}
       </button>
     </div>
   )
@@ -954,6 +1159,7 @@ function SortableSection({ mod }) {
 }
 
 function SectionReorder() {
+  const t       = useT()
   const modules = useResumeStore((s) => s.resume.modules)
   const reorder = useResumeStore((s) => s.reorderModules)
 
@@ -977,7 +1183,7 @@ function SectionReorder() {
           <Lock size={11} className="text-cyan-400 flex-none" />
           <span className="flex-1 text-xs text-gray-800 truncate">{personalMod.name}</span>
           <span className="text-[9px] text-cyan-400/50 uppercase tracking-widest flex-none">
-            pinned
+            {t('cust.pinned')}
           </span>
         </div>
       )}
@@ -995,131 +1201,134 @@ function SectionReorder() {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function CustomizePanel() {
+  const t      = useT()
   const c      = useResumeStore((s) => s.resume.customize)
   const update = useResumeStore((s) => s.updateCustomize)
 
   return (
     <div className="h-full overflow-y-auto p-5 flex flex-col gap-4 app-scrollbar">
 
-      {/* ── MODULE I: PHOTO ── */}
-      <PhotoSection c={c} update={update}/>
-
-      {/* ── MODULE: NAME & ROLE TITLE ── */}
-      <NameTitleSection c={c} update={update}/>
-
-      {/* ── MODULE II: HEADER LAYOUT ── */}
+      {/* ── Personal detail ── */}
       <HeaderLayoutSection c={c} update={update}/>
 
-      {/* ── MODULE: SKILLS ── */}
-      <SkillsSection c={c} update={update}/>
+      {/* ── Photo ── */}
+      <PhotoSection c={c} update={update}/>
 
-      {/* ── MODULE: EDUCATION ── */}
-      <EducationSection c={c} update={update}/>
-
-      {/* ── MODULE: EXPERIENCE ── */}
-      <ExperienceSection c={c} update={update}/>
-
-      {/* ── MODULE III: TEMPLATE ── */}
-      <ModuleSection icon={LayoutTemplate} label="Template">
+      {/* ── Template ── */}
+      <ModuleSection icon={LayoutTemplate} label={t('cust.template')}>
         <TemplateCarousel
           current={c.template}
-          onApply={(t) => update({ template: t })}
+          onApply={(v) => update({ template: v })}
         />
       </ModuleSection>
 
-      {/* ── MODULE II: LAYOUT & SPACING ── */}
-      <ModuleSection icon={Rows3} label="Layout & Spacing">
+      {/* ── Layout & Spacing ── */}
+      <ModuleSection icon={Rows3} label={t('cust.layout_spacing')}>
 
         {/* 1 · Columns */}
-        <SubSection label="Columns">
+        <SubSection label={t('cust.columns')}>
           <ChoiceRow
             value={c.columns}
             onChange={(v) => update({ columns: v })}
             options={[
-              { id: 'single', label: 'Single' },
-              { id: 'two',    label: 'Double' },
+              { id: 'single', label: t('cust.col_single') },
+              { id: 'two',    label: t('cust.col_double') },
             ]}
             columns={2}
           />
         </SubSection>
 
         {/* 2 · Section Order */}
-        <SubSection label="Section Order">
+        <SubSection label={t('cust.section_order')}>
           <SectionReorder />
         </SubSection>
 
         {/* 3 · Spacing */}
-        <SubSection label="Spacing">
-          <ChoiceRow
-            label="Font size"
+        <SubSection label={t('cust.spacing')}>
+          <DiscreteSlider
+            label={t('cust.font_size')}
             value={c.font_size}
             onChange={(v) => update({ font_size: v })}
             options={FONT_SIZES.map((n) => ({ id: n, label: String(n) }))}
-            columns={7}
+            unit="pt"
           />
-          <ChoiceRow
-            label="Line height"
+          <DiscreteSlider
+            label={t('cust.line_height')}
             value={c.line_height}
             onChange={(v) => update({ line_height: v })}
             options={LINE_HEIGHTS.map((n) => ({ id: n, label: String(n) }))}
-            columns={7}
           />
-          <ChoiceRow
-            label="Left & Right margin"
+          <DiscreteSlider
+            label={t('cust.lr_margin')}
             value={c.page_margin}
             onChange={(v) => update({ page_margin: v })}
             options={LR_MARGINS}
-            columns={4}
           />
-          <ChoiceRow
-            label="Top & Bottom margin"
+          <DiscreteSlider
+            label={t('cust.tb_margin')}
             value={c.vertical_margin ?? 24}
             onChange={(v) => update({ vertical_margin: v })}
             options={TB_MARGINS}
-            columns={4}
           />
-          <ChoiceRow
-            label="Space between entries"
+          <DiscreteSlider
+            label={t('cust.entry_spacing')}
             value={c.entry_spacing}
             onChange={(v) => update({ entry_spacing: v })}
             options={ENTRY_SPACINGS.map((n) => ({ id: n, label: String(n) }))}
-            columns={6}
+            unit="px"
           />
         </SubSection>
 
         {/* 4 · Entry Layout */}
-        <SubSection label="Entry Layout">
-          <ChoiceRow
-            label="Layout mode"
+        <SubSection label={t('cust.entry_layout_section')}>
+          <EntryLayoutPicker
             value={c.entry_layout ?? 'inline'}
             onChange={(v) => update({ entry_layout: v })}
-            options={ENTRY_LAYOUTS}
-            columns={3}
           />
-          <ChoiceRow
-            label="Title size"
+          <DiscreteSlider
+            label={t('cust.entry_title_size')}
             value={c.entry_title_size ?? 11}
             onChange={(v) => update({ entry_title_size: v })}
             options={TITLE_SIZES.map((n) => ({ id: n, label: String(n) }))}
-            columns={5}
+            unit="pt"
           />
-          <ChoiceRow
-            label="Section heading size"
+          <DiscreteSlider
+            label={t('cust.section_heading_size')}
             value={c.subtitle_size ?? 11}
             onChange={(v) => update({ subtitle_size: v })}
             options={SUBTITLE_SIZES.map((n) => ({ id: n, label: String(n) }))}
-            columns={5}
+            unit="pt"
           />
           <ChoiceRow
-            label="Section heading style"
+            label={t('cust.section_heading_style')}
             value={c.subtitle_style ?? 'underline'}
             onChange={(v) => update({ subtitle_style: v })}
-            options={SUBTITLE_STYLES}
+            options={[
+              { id: 'underline',   label: t('cust.style_underline') },
+              { id: 'double-line', label: t('cust.style_double')    },
+              { id: 'box',         label: t('cust.style_box')       },
+              { id: 'pill',        label: t('cust.style_pill')      },
+              { id: 'left-bar',    label: t('cust.style_left_bar')  },
+              { id: 'plain',       label: t('cust.style_plain')     },
+            ]}
             columns={3}
           />
         </SubSection>
 
       </ModuleSection>
+
+      {/* ── Name & Role Title ── */}
+      <NameTitleSection c={c} update={update}/>
+
+      {/* ── Education ── */}
+      <EducationSection c={c} update={update}/>
+
+      {/* ── Work Experience ── */}
+      <ExperienceSection c={c} update={update}/>
+
+      {/* ── Skills ── */}
+      <SkillsSection c={c} update={update}/>
+
     </div>
   )
 }

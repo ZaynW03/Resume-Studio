@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { X, CheckSquare, Square, Library } from 'lucide-react'
 import { api } from '../../api'
 import { Button } from './Fields'
+import { useT } from '../../i18n'
 
 // Map module type -> profile library pool key
 const TYPE_TO_POOL = {
@@ -46,6 +47,7 @@ function summarize(poolKey, e) {
 }
 
 export default function LibraryPickerModal({ moduleType, onClose, onPick }) {
+  const t = useT()
   const [profile, setProfile] = useState(null)
   const [selected, setSelected] = useState(new Set())
 
@@ -84,9 +86,9 @@ export default function LibraryPickerModal({ moduleType, onClose, onPick }) {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
         <div className="card p-4 max-w-md">
           <div className="text-sm text-gray-700 mb-3">
-            Profile library doesn't track this module type.
+            {t('lib.not_tracked')}
           </div>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t('lib.close')}</Button>
         </div>
       </div>,
       document.body
@@ -100,14 +102,12 @@ export default function LibraryPickerModal({ moduleType, onClose, onPick }) {
         <div className="flex items-center gap-3 px-5 h-14 border-b border-white/5 flex-shrink-0">
           <Library size={16} className="text-cyan-400"/>
           <div>
-            <div className="text-sm font-semibold text-gray-900">Add from profile library</div>
-            <div className="text-[11px] text-zinc-500">
-              Select entries to copy into this resume. Edits won't affect the library copy.
-            </div>
+            <div className="text-sm font-semibold text-gray-900">{t('lib.title')}</div>
+            <div className="text-[11px] text-zinc-500">{t('lib.subtitle')}</div>
           </div>
           <div className="flex-1"/>
           <button onClick={toggleAll} className="text-[11px] text-cyan-400 hover:text-cyan-300">
-            {entries.length && selected.size === entries.length ? 'Deselect all' : 'Select all'}
+            {entries.length && selected.size === entries.length ? t('lib.deselect_all') : t('lib.select_all')}
           </button>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/5 text-zinc-400 hover:text-white">
             <X size={16}/>
@@ -117,11 +117,11 @@ export default function LibraryPickerModal({ moduleType, onClose, onPick }) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4">
           {!profile ? (
-            <div className="text-sm text-zinc-500 py-6 text-center">Loading library…</div>
+            <div className="text-sm text-zinc-500 py-6 text-center">{t('lib.loading')}</div>
           ) : entries.length === 0 ? (
             <div className="text-sm text-zinc-500 py-8 text-center">
-              Your profile library has no {pool} entries yet.
-              <br/>Add some under the <span className="text-cyan-400">Profile</span> tab first.
+              {t('lib.empty')}
+              <br/>{t('lib.empty_hint')}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -168,12 +168,12 @@ export default function LibraryPickerModal({ moduleType, onClose, onPick }) {
         {/* Footer */}
         <div className="flex items-center gap-2 px-5 py-3 border-t border-white/5 bg-ink-900/40 flex-shrink-0">
           <div className="text-[11px] text-zinc-500">
-            {selected.size} selected
+            {selected.size} {t('lib.selected')}
           </div>
           <div className="flex-1"/>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose}>{t('lib.cancel')}</Button>
           <Button onClick={confirm} disabled={selected.size === 0}>
-            Add {selected.size || ''}
+            {t('lib.add')} {selected.size || ''}
           </Button>
         </div>
       </div>

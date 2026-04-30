@@ -8,11 +8,11 @@ import {
 } from 'lucide-react'
 import { useT } from '../../i18n'
 
-const TABS = [
-  { id: 'profile',   label: 'Profile',   Icon: User },
-  { id: 'content',   label: 'Content',   Icon: FileEdit },
-  { id: 'customize', label: 'Customize', Icon: Palette },
-  { id: 'ai',        label: 'AI Tools',  Icon: Sparkles },
+const TAB_KEYS = [
+  { id: 'profile',   key: 'tab.profile',   Icon: User },
+  { id: 'content',   key: 'tab.content',   Icon: FileEdit },
+  { id: 'customize', key: 'tab.customize', Icon: Palette },
+  { id: 'ai',        key: 'tab.ai',        Icon: Sparkles },
 ]
 
 export default function TopBar({ onImportParsed }) {
@@ -87,7 +87,7 @@ export default function TopBar({ onImportParsed }) {
 
       {/* Tab navigation */}
       <nav className="flex items-center gap-0.5">
-        {TABS.map(({ id, label, Icon }) => {
+        {TAB_KEYS.map(({ id, key, Icon }) => {
           const active = activeTab === id
           return (
             <button
@@ -101,7 +101,7 @@ export default function TopBar({ onImportParsed }) {
               ].join(' ')}
             >
               <Icon size={14}/>
-              {label}
+              {t(key)}
             </button>
           )
         })}
@@ -114,9 +114,9 @@ export default function TopBar({ onImportParsed }) {
         {/* Save status */}
         <div className="flex items-center gap-1.5 text-[11px] font-mono text-gray-400">
           {saving ? (
-            <><Loader2 size={11} className="animate-spin text-indigo-500"/><span className="text-indigo-500">Saving…</span></>
+            <><Loader2 size={11} className="animate-spin text-indigo-500"/><span className="text-indigo-500">{t('topbar.status_saving')}</span></>
           ) : savedAt ? (
-            <><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"/><span>Saved</span></>
+            <><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"/><span>{t('topbar.status_saved')}</span></>
           ) : null}
         </div>
 
@@ -139,12 +139,12 @@ export default function TopBar({ onImportParsed }) {
             onClick={() => setMenuOpen((o) => !o)}
             className="btn-ghost flex items-center gap-1"
           >
-            Open <ChevronDown size={12}/>
+            {t('topbar.open')} <ChevronDown size={12}/>
           </button>
           {menuOpen && (
             <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-lg py-1 max-h-80 overflow-y-auto z-30">
               <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-gray-400 border-b border-gray-100">
-                Recent Resumes
+                {t('topbar.recent')}
               </div>
               {resumes.length === 0 && (
                 <div className="px-3 py-2 text-xs text-gray-400">{t('topbar.no_saved')}</div>
@@ -168,11 +168,11 @@ export default function TopBar({ onImportParsed }) {
         </div>
 
         <Button variant="ghost" onClick={onNew}>
-          <FilePlus2 size={13}/> New
+          <FilePlus2 size={13}/> {t('topbar.new')}
         </Button>
 
         <Button variant="secondary" onClick={() => fileInput.current?.click()}>
-          <Upload size={13}/>{uploading ? 'Parsing…' : 'Import'}
+          <Upload size={13}/>{uploading ? t('topbar.parsing') : t('topbar.import')}
         </Button>
         <input
           ref={fileInput}
@@ -183,7 +183,7 @@ export default function TopBar({ onImportParsed }) {
         />
 
         <Button onClick={() => save().then(refreshList)}>
-          <Save size={13}/> Save
+          <Save size={13}/> {t('topbar.save')}
         </Button>
       </div>
     </div>

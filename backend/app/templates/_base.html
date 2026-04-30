@@ -102,7 +102,9 @@
     width: 14px; height: 14px;
     align-items: center; justify-content: center;
     color: {{ c.accent_color }}; flex-shrink: 0;
+    line-height: 0;
   }
+  .contact-item .icon svg { display: block; }
   .contact-sep {
     color: #9ca3af; flex-shrink: 0; align-self: center;
     font-size: {{ c.font_size * 0.95 }}pt;
@@ -129,6 +131,7 @@
     letter-spacing: 0.04em;
     margin: {{ c.section_margin }}px 0 4px;
     display: flex; align-items: center; gap: 8px;
+    line-height: 1.2;
     {% if c.subtitle_style == 'underline' %}
       padding-bottom: 4px;
       border-bottom: 1.5px solid {{ c.subtitle_color }};
@@ -157,7 +160,9 @@
     display: inline-flex; width: 18px; height: 18px;
     align-items: center; justify-content: center;
     color: {% if c.subtitle_style == 'pill' %}white{% else %}{{ c.subtitle_color }}{% endif %};
+    line-height: 0;
   }
+  h2.section .sec-icon svg { display: block; }
   {% endblock %}
 
   {# ── Entries ── #}
